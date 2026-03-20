@@ -1,49 +1,71 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Compre produtos de Moda e Vestuário por internet. Temos conjuntos curtos, conjuntos longos e mais.">
-    <title>LOJA ONLINE DE LUXURY</title>
+    <meta name="description"
+        content="Compre produtos de Moda e Vestuário por internet. Temos conjuntos curtos, conjuntos longos e mais.">
+    <title>DeVille Fashion</title>
     <!-- Google Fonts: Montserrat -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
     <!-- Header Section -->
     <header class="header">
         <div class="header-container">
             <div class="header-icon search-icon">
-               <i class="fa-solid fa-magnifying-glass"></i>
+                <i class="fa-solid fa-magnifying-glass"></i>
             </div>
-            
+
             <div class="logo">
-                <a href="#">LUXURY</a>
+                <a href="index.html" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="35" height="35">
+                        <defs>
+                            <linearGradient id="luxorGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#F2DF8E" />
+                                <stop offset="30%" stop-color="#D4AF37" />
+                                <stop offset="50%" stop-color="#996515" />
+                                <stop offset="70%" stop-color="#D4AF37" />
+                                <stop offset="100%" stop-color="#F2DF8E" />
+                            </linearGradient>
+                        </defs>
+                        <g>
+                            <polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="url(#luxorGold)" stroke-width="4"/>
+                            <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="url(#luxorGold)" stroke-width="2" opacity="0.6"/>
+                            <path d="M 28 35 L 50 75 L 72 35 L 62 35 L 50 57 L 38 35 Z" fill="url(#luxorGold)"/>
+                        </g>
+                    </svg>
+                    <span>DeVille Fashion</span>
+                </a>
             </div>
 
             <div class="header-icons-right">
-                <a href="#" class="header-icon"><i class="fa-regular fa-user"></i></a>
-                <a href="#" class="header-icon"><i class="fa-solid fa-bag-shopping"></i><span class="cart-count">0</span></a>
+                <a href="login.html" class="header-icon"><i class="fa-regular fa-user"></i></a>
+                <a href="carrinho.html" class="header-icon"><i class="fa-solid fa-bag-shopping"></i><span
+                        class="cart-count">0</span></a>
             </div>
         </div>
 
         <!-- Navigation -->
         <nav class="main-nav">
             <ul class="nav-list">
-                <li><a href="#" class="active">INÍCIO</a></li>
-                <li><a href="#">PRODUTOS</a></li>
-                <li><a href="#">CONTATO</a></li>
-                <li><a href="#">RETIRADA</a></li>
-                <li><a href="#">POLITICAS DE TROCAS</a></li>
-                <li><a href="#">PERGUNTAS FREQUENTES</a></li>
-                <li><a href="#">SEJA UMA REVENDEDORA</a></li>
-                <li><a href="#">COMO COMPRAR</a></li>
+                <li><a href="index.html" class="active">INÍCIO</a></li>
+                <li><a href="produtos.html">PRODUTOS</a></li>
+                <li><a href="contato.html">CONTATO</a></li>
+                <li><a href="retirada.html">RETIRADA</a></li>
+                <li><a href="politicas-de-trocas.html">POLITICAS DE TROCAS</a></li>
+                <li><a href="perguntas-frequentes.html">PERGUNTAS FREQUENTES</a></li>
+                <li><a href="como-comprar.html">COMO COMPRAR</a></li>
             </ul>
         </nav>
     </header>
@@ -55,15 +77,11 @@
             <span>FRETE GRÁTIS</span>
         </div>
         <div class="info-item">
-            <i class="fa-solid fa-store"></i>
-            <span>SEJA UMA REVENDEDORA</span>
-        </div>
-        <div class="info-item">
             <i class="fa-solid fa-arrow-right-arrow-left"></i>
             <span>TROCAS GRÁTIS</span>
         </div>
         <div class="info-item">
-             <i class="fa-brands fa-pix"></i>
+            <i class="fa-brands fa-pix"></i>
             <span>DESCONTO NO PIX</span>
         </div>
     </div>
@@ -88,23 +106,23 @@
         <!-- Categories / Promotions Grid (Example) -->
         <section class="promotions-grid">
             <div class="promo-item">
-               <img src="assets/promo_1.jpg" alt="Promo 1">
+                <img src="assets/promo_1.jpg" alt="Promo 1">
             </div>
-             <div class="promo-item">
-               <img src="assets/promo_2.jpg" alt="Promo 2">
+            <div class="promo-item">
+                <img src="assets/promo_2.jpg" alt="Promo 2">
             </div>
         </section>
 
         <!-- Product Section: Coleção Golden Hour -->
         <section class="product-section">
             <h2 class="section-title">COLEÇÃO GOLDEN HOUR</h2>
-            
+
             <div class="product-grid">
                 <!-- Product 1 -->
                 <div class="product-card">
                     <div class="product-image">
-                       <img src="assets/product_1.jpg" alt="Conjunto Linho">
-                       <span class="discount-badge">-30% OFF</span>
+                        <img src="assets/product_1.jpg" alt="Conjunto Linho">
+                        <span class="discount-badge">-30% OFF</span>
                     </div>
                     <div class="product-info">
                         <h3 class="product-title">CONJUNTO LINHO</h3>
@@ -124,8 +142,8 @@
                     <div class="product-info">
                         <h3 class="product-title">MACAQUINHO CLEANE</h3>
                         <div class="product-price">
-                             <span class="current-price">R$ 120,54</span>
-                             <span class="original-price">R$ 172,20</span>
+                            <span class="current-price">R$ 120,54</span>
+                            <span class="original-price">R$ 172,20</span>
                         </div>
                     </div>
                 </div>
@@ -146,7 +164,7 @@
                 </div>
 
                 <!-- Product 4 -->
-                 <div class="product-card">
+                <div class="product-card">
                     <div class="product-image">
                         <img src="assets/product_4.jpg" alt="Macaquinho Yasmin">
                         <span class="discount-badge">-30% OFF</span>
@@ -154,14 +172,14 @@
                     <div class="product-info">
                         <h3 class="product-title">MACAQUINHO YASMIM</h3>
                         <div class="product-price">
-                             <span class="current-price">R$ 110,18</span>
-                             <span class="original-price">R$ 157,40</span>
+                            <span class="current-price">R$ 110,18</span>
+                            <span class="original-price">R$ 157,40</span>
                         </div>
                     </div>
                 </div>
             </div>
-            
-             <button class="view-all-btn">VER TODOS OS PRODUTOS</button>
+
+            <a href="produtos.html" class="view-all-btn">VER TODOS OS PRODUTOS</a>
         </section>
 
     </main>
@@ -186,60 +204,61 @@
             <div class="footer-col">
                 <h3>DEPARTAMENTOS</h3>
                 <ul>
-                    <li><a href="#">Início</a></li>
-                    <li><a href="#">Produtos</a></li>
-                    <li><a href="#">Contato</a></li>
-                    <li><a href="#">Retirada</a></li>
-                    <li><a href="#">Politicas de trocas</a></li>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="produtos.html">Produtos</a></li>
+                    <li><a href="contato.html">Contato</a></li>
+                    <li><a href="retirada.html">Retirada</a></li>
+                    <li><a href="politicas-de-trocas.html">Politicas de trocas</a></li>
                 </ul>
             </div>
 
             <div class="footer-col">
                 <h3>ENTRE EM CONTATO</h3>
                 <ul class="contact-info">
-                    <li><i class="fa-brands fa-whatsapp"></i> 5585989404438</li>
-                    <li><i class="fa-regular fa-envelope"></i> lojasluxury@gmail.com</li>
-                     <!-- Add address if needed -->
+                    <li><a href="https://wa.me/551234567890" target="_blank" style="color: inherit; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> 551234567890</a></li>
+                    <li><a href="mailto:devillefashions@gmail.com" style="color: inherit; text-decoration: none;"><i class="fa-regular fa-envelope"></i> devillefashions@gmail.com</a></li>
+                    <!-- Add address if needed -->
                 </ul>
             </div>
 
             <div class="footer-col social-col">
                 <h3>REDES SOCIAIS</h3>
                 <div class="social-icons">
-                     <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
                 </div>
             </div>
         </div>
 
         <div class="footer-bottom">
             <div class="payments">
-                 <!-- Add payment icons -->
-                 <p>Formas de pagamento</p>
-                 <div class="icons">
-                     <i class="fa-brands fa-cc-visa"></i>
-                     <i class="fa-brands fa-cc-mastercard"></i>
-                     <i class="fa-brands fa-pix"></i>
-                 </div>
+                <!-- Add payment icons -->
+                <p>Formas de pagamento</p>
+                <div class="icons">
+                    <i class="fa-brands fa-cc-visa"></i>
+                    <i class="fa-brands fa-cc-mastercard"></i>
+                    <i class="fa-brands fa-pix"></i>
+                </div>
             </div>
-             <div class="shipping">
-                 <p>Formas de envio</p>
-                 <div class="icons">
+            <div class="shipping">
+                <p>Formas de envio</p>
+                <div class="icons">
                     <i class="fa-solid fa-truck"></i>
-                 </div>
-             </div>
+                </div>
+            </div>
         </div>
-        
+
         <div class="copyright">
-            <p>&copy; 2024 Lojas Luxury. Todos os direitos reservados.</p>
+            <p>&copy; 2024 DeVille Fashion. Todos os direitos reservados.</p>
         </div>
     </footer>
 
     <!-- WhatsApp Floating Button -->
-    <a href="#" class="whatsapp-float">
+    <a href="https://wa.me/551234567890" class="whatsapp-float" target="_blank">
         <i class="fa-brands fa-whatsapp"></i>
     </a>
 
     <!-- Custom JS -->
     <script src="script.js"></script>
 </body>
+
 </html>
