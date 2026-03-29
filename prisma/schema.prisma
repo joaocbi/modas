@@ -21,3 +21,26 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model Order {
+  id         Int      @id @default(autoincrement())
+  customer   String
+  total      Decimal  @db.Decimal(10, 2)
+  status     String
+  channel    String
+  itemCount  Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Coupon {
+  id         Int      @id @default(autoincrement())
+  code       String   @unique
+  type       String
+  value      Decimal  @db.Decimal(10, 2)
+  minOrder   Decimal  @db.Decimal(10, 2)
+  active     Boolean  @default(true)
+  usageCount Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

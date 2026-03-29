@@ -770,6 +770,28 @@ img {
     gap: 24px;
 }
 
+.admin-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.admin-tab {
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.admin-tab.is-active {
+    background: var(--color-primary);
+    color: #ffffff;
+}
+
 .admin-storage-banner {
     margin-bottom: 24px;
     padding: 16px 18px;

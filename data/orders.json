@@ -1,0 +1,34 @@
+[
+  {
+    "id": 1,
+    "customer": "Ana Silva",
+    "total": 249.9,
+    "status": "pending",
+    "channel": "WhatsApp",
+    "itemCount": 2
+  },
+  {
+    "id": 2,
+    "customer": "Marina Costa",
+    "total": 116.66,
+    "status": "paid",
+    "channel": "Site",
+    "itemCount": 1
+  },
+  {
+    "id": 3,
+    "customer": "Julia Freitas",
+    "total": 379.8,
+    "status": "shipped",
+    "channel": "Instagram",
+    "itemCount": 3
+  },
+  {
+    "id": 4,
+    "customer": "Camila Rocha",
+    "total": 120.54,
+    "status": "delivered",
+    "channel": "Site",
+    "itemCount": 1
+  }
+]

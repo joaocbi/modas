@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "code": "WELCOME10",
+    "type": "percent",
+    "value": 10,
+    "minOrder": 120,
+    "active": true,
+    "usageCount": 8
+  },
+  {
+    "id": 2,
+    "code": "PIX20",
+    "type": "fixed",
+    "value": 20,
+    "minOrder": 180,
+    "active": true,
+    "usageCount": 4
+  },
+  {
+    "id": 3,
+    "code": "VIP15",
+    "type": "percent",
+    "value": 15,
+    "minOrder": 250,
+    "active": false,
+    "usageCount": 1
+  }
+]
