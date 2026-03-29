@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minha Conta - DeVille Fashion</title>
+    <!-- Google Fonts: Montserrat -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Header Section (Same as index.html) -->
+    <header class="header">
+        <div class="header-container">
+            <div class="header-icon search-icon">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+
+            <div class="logo">
+                <a href="index.html" style="display: flex; align-items: center; gap: 8px; text-decoration: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="35" height="35">
+                        <defs>
+                            <linearGradient id="luxorGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#F2DF8E" />
+                                <stop offset="30%" stop-color="#D4AF37" />
+                                <stop offset="50%" stop-color="#996515" />
+                                <stop offset="70%" stop-color="#D4AF37" />
+                                <stop offset="100%" stop-color="#F2DF8E" />
+                            </linearGradient>
+                        </defs>
+                        <g>
+                            <polygon points="50,0 100,50 50,100 0,50" fill="none" stroke="url(#luxorGold)" stroke-width="4"/>
+                            <polygon points="50,10 90,50 50,90 10,50" fill="none" stroke="url(#luxorGold)" stroke-width="2" opacity="0.6"/>
+                            <path d="M 28 35 L 50 75 L 72 35 L 62 35 L 50 57 L 38 35 Z" fill="url(#luxorGold)"/>
+                        </g>
+                    </svg>
+                    <span>DeVille Fashion</span>
+                </a>
+            </div>
+
+            <div class="header-icons-right">
+                <a href="login.html" class="header-icon"><i class="fa-regular fa-user"></i></a>
+                <a href="carrinho.html" class="header-icon"><i class="fa-solid fa-bag-shopping"></i><span
+                        class="cart-count">0</span></a>
+            </div>
+        </div>
+
+        <nav class="main-nav">
+            <ul class="nav-list">
+                <li><a href="index.html">INÍCIO</a></li>
+                <li><a href="produtos.html">PRODUTOS</a></li>
+                <li><a href="contato.html">CONTATO</a></li>
+                <li><a href="retirada.html">RETIRADA</a></li>
+                <li><a href="politicas-de-trocas.html">POLITICAS DE TROCAS</a></li>
+                <li><a href="perguntas-frequentes.html">PERGUNTAS FREQUENTES</a></li>
+
+                <li><a href="como-comprar.html">COMO COMPRAR</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="index.html">Início</a> &gt; Minha conta
+    </div>
+
+    <!-- Main Content: Login and Registration Forms -->
+    <main class="account-page">
+        <div class="account-container">
+
+            <!-- Login Form -->
+            <div class="form-section login-box">
+                <h2>JÁ SOU CLIENTE</h2>
+                <p>Se você já tem uma conta, por favor entre.</p>
+                <form action="#" method="POST">
+                    <div class="input-group">
+                        <label for="login-email">E-mail *</label>
+                        <input type="email" id="login-email" name="login-email" required placeholder="Seu e-mail">
+                    </div>
+                    <div class="input-group">
+                        <label for="login-password">Senha *</label>
+                        <input type="password" id="login-password" name="login-password" required
+                            placeholder="Sua senha">
+                    </div>
+                    <a href="#" class="forgot-password">Esqueceu sua senha?</a>
+                    <button type="submit" class="btn btn-primary">ACESSAR CONTA</button>
+                </form>
+            </div>
+
+            <div class="divider-vertical"></div>
+
+            <!-- Registration Form -->
+            <div class="form-section register-box">
+                <h2>CRIAR UMA CONTA</h2>
+                <p>Crie uma conta para facilitar suas compras e acompanhar pedidos.</p>
+                <form action="#" method="POST">
+                    <div class="input-group">
+                        <label for="reg-name">Nome Completo *</label>
+                        <input type="text" id="reg-name" name="reg-name" required placeholder="Seu nome completo">
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-email">E-mail *</label>
+                        <input type="email" id="reg-email" name="reg-email" required placeholder="Seu e-mail">
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-cpf">CPF *</label>
+                        <input type="text" id="reg-cpf" name="reg-cpf" required placeholder="000.000.000-00">
+                    </div>
+                    <div class="input-group">
+                        <label for="reg-password">Senha *</label>
+                        <input type="password" id="reg-password" name="reg-password" required
+                            placeholder="Crie uma senha">
+                    </div>
+                    <button type="submit" class="btn btn-secondary">CADASTRAR</button>
+                </form>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer (Same as index.html) -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-col">
+                <h3>DEPARTAMENTOS</h3>
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="produtos.html">Produtos</a></li>
+                    <li><a href="contato.html">Contato</a></li>
+                    <li><a href="retirada.html">Retirada</a></li>
+                    <li><a href="politicas-de-trocas.html">Politicas de trocas</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>ENTRE EM CONTATO</h3>
+                <ul class="contact-info">
+                    <li><a href="https://wa.me/551234567890" target="_blank" style="color: inherit; text-decoration: none;"><i class="fa-brands fa-whatsapp"></i> 551234567890</a></li>
+                    <li><a href="mailto:devillefashions@gmail.com" style="color: inherit; text-decoration: none;"><i class="fa-regular fa-envelope"></i> devillefashions@gmail.com</a></li>
+                </ul>
+            </div>
+            <div class="footer-col social-col">
+                <h3>REDES SOCIAIS</h3>
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="payments">
+                <p>Formas de pagamento</p>
+                <div class="icons">
+                    <i class="fa-brands fa-cc-visa"></i>
+                    <i class="fa-brands fa-cc-mastercard"></i>
+                    <i class="fa-brands fa-pix"></i>
+                </div>
+            </div>
+            <div class="shipping">
+                <p>Formas de envio</p>
+                <div class="icons">
+                    <i class="fa-solid fa-truck"></i>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy DeVille Fashion. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+
+</html>
