@@ -1,4 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
+const { PrismaPg } = require("@prisma/adapter-pg");
+const { Pool } = require("pg");
 const products = require("../data/products.json");
 const orders = require("../data/orders.json");
 const coupons = require("../data/coupons.json");
@@ -10,7 +12,13 @@ async function main() {
         return;
     }
 
-    const prisma = new PrismaClient();
+    const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+    });
+    const adapter = new PrismaPg(pool);
+    const prisma = new PrismaClient({
+        adapter,
+    });
 
     try {
         await prisma.product.deleteMany();
@@ -82,6 +90,7 @@ async function main() {
         });
     } finally {
         await prisma.$disconnect();
+        await pool.end();
     }
 }
 
