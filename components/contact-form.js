@@ -38,9 +38,36 @@ export function ContactForm({ title, description, subject, fields, compact = fal
         return emailField ? formValues[emailField.name] : "";
     }
 
-    function handleWhatsApp() {
+    function getLeadData() {
+        return {
+            name: formValues.name || "",
+            email: getReplyTo(),
+            phone: formValues.phone || formValues.tel || "",
+        };
+    }
+
+    async function handleWhatsApp() {
         const message = buildMessage();
         console.log("[ContactForm] Redirecting to WhatsApp.", { subject, formValues });
+
+        try {
+            await fetch("/api/contact", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    subject,
+                    body: message,
+                    replyTo: getReplyTo(),
+                    preferredChannel: "whatsapp",
+                    leadData: getLeadData(),
+                }),
+            });
+        } catch (error) {
+            console.log("[ContactForm] Failed to store WhatsApp lead.", error);
+        }
+
         window.open(buildWhatsAppUrl(message), "_blank", "noopener,noreferrer");
     }
 
@@ -64,6 +91,8 @@ export function ContactForm({ title, description, subject, fields, compact = fal
                     subject,
                     body: message,
                     replyTo,
+                    preferredChannel: "email",
+                    leadData: getLeadData(),
                 }),
             });
 

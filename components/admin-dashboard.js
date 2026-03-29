@@ -41,6 +41,13 @@ function getEmptyCouponForm() {
     };
 }
 
+function formatCurrency(value) {
+    return new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+    }).format(Number(value || 0));
+}
+
 async function sendAdminRequest(url, method, payload) {
     const response = await fetch(url, {
         method,
@@ -54,50 +61,141 @@ async function sendAdminRequest(url, method, payload) {
     return { response, data };
 }
 
-function MetricCard({ label, value }) {
+function MetricCard({ label, value, help }) {
     return (
-        <article className="content-card">
+        <article className="content-card admin-metric-card">
             <strong>{label}</strong>
             <h2>{value}</h2>
+            {help ? <p>{help}</p> : null}
         </article>
     );
 }
 
-export function AdminDashboard({ initialProducts, initialOrders, initialCoupons, adminEmail, storageMode, canManage }) {
+function ChartCard({ title, items }) {
+    const maxValue = Math.max(...items.map((item) => item.value), 1);
+
+    return (
+        <article className="content-card admin-chart-card">
+            <strong>{title}</strong>
+            <div className="admin-chart-list">
+                {items.map((item) => (
+                    <div key={item.label} className="admin-chart-row">
+                        <div className="admin-chart-header">
+                            <span>{item.label}</span>
+                            <strong>{item.value}</strong>
+                        </div>
+                        <div className="admin-chart-track">
+                            <div className="admin-chart-bar" style={{ width: `${(item.value / maxValue) * 100}%` }} />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </article>
+    );
+}
+
+export function AdminDashboard({
+    initialProducts,
+    initialOrders,
+    initialCoupons,
+    initialLeads,
+    adminEmail,
+    storageMode,
+    canManage,
+}) {
     const [products, setProducts] = useState(initialProducts);
     const [orders, setOrders] = useState(initialOrders);
     const [coupons, setCoupons] = useState(initialCoupons);
+    const [leads, setLeads] = useState(initialLeads);
     const [productForm, setProductForm] = useState(getEmptyProductForm());
     const [orderForm, setOrderForm] = useState(getEmptyOrderForm());
     const [couponForm, setCouponForm] = useState(getEmptyCouponForm());
+    const [activeTab, setActiveTab] = useState("overview");
+    const [searchTerm, setSearchTerm] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
     const [statusType, setStatusType] = useState("success");
-    const [activeTab, setActiveTab] = useState("products");
     const [isSaving, setIsSaving] = useState(false);
+    const [imagePreview, setImagePreview] = useState("/assets/product_1.jpg");
 
     const totalFeatured = useMemo(() => products.filter((product) => product.featured).length, [products]);
     const totalRevenue = useMemo(() => orders.reduce((sum, order) => sum + Number(order.total || 0), 0), [orders]);
     const activeCoupons = useMemo(() => coupons.filter((coupon) => coupon.active).length, [coupons]);
+    const openLeads = useMemo(() => leads.filter((lead) => lead.status === "new").length, [leads]);
+
+    const orderStatusChart = useMemo(() => {
+        const summary = orders.reduce((accumulator, order) => {
+            const key = String(order.status || "unknown").toLowerCase();
+            accumulator[key] = (accumulator[key] || 0) + 1;
+            return accumulator;
+        }, {});
+
+        return Object.entries(summary).map(([label, value]) => ({ label, value }));
+    }, [orders]);
+
+    const leadChannelChart = useMemo(() => {
+        const summary = leads.reduce((accumulator, lead) => {
+            const key = String(lead.channel || "unknown").toLowerCase();
+            accumulator[key] = (accumulator[key] || 0) + 1;
+            return accumulator;
+        }, {});
+
+        return Object.entries(summary).map(([label, value]) => ({ label, value }));
+    }, [leads]);
+
+    const filteredProducts = useMemo(() => {
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+        if (!normalizedSearch) {
+            return products;
+        }
+
+        return products.filter((product) =>
+            [product.name, product.category, product.badge].some((value) => String(value || "").toLowerCase().includes(normalizedSearch))
+        );
+    }, [products, searchTerm]);
+
+    const filteredOrders = useMemo(() => {
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+        if (!normalizedSearch) {
+            return orders;
+        }
+
+        return orders.filter((order) =>
+            [order.customer, order.status, order.channel, String(order.id)].some((value) => String(value || "").toLowerCase().includes(normalizedSearch))
+        );
+    }, [orders, searchTerm]);
+
+    const filteredCoupons = useMemo(() => {
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+        if (!normalizedSearch) {
+            return coupons;
+        }
+
+        return coupons.filter((coupon) =>
+            [coupon.code, coupon.type, coupon.active ? "ativo" : "inativo"].some((value) => String(value || "").toLowerCase().includes(normalizedSearch))
+        );
+    }, [coupons, searchTerm]);
+
+    const filteredLeads = useMemo(() => {
+        const normalizedSearch = searchTerm.trim().toLowerCase();
+        if (!normalizedSearch) {
+            return leads;
+        }
+
+        return leads.filter((lead) =>
+            [lead.name, lead.email, lead.phone, lead.subject, lead.channel, lead.status].some((value) =>
+                String(value || "").toLowerCase().includes(normalizedSearch)
+            )
+        );
+    }, [leads, searchTerm]);
 
     function showStatus(type, message) {
         setStatusType(type);
         setStatusMessage(message);
     }
 
-    function updateProductField(name, value) {
-        setProductForm((current) => ({ ...current, [name]: value }));
-    }
-
-    function updateOrderField(name, value) {
-        setOrderForm((current) => ({ ...current, [name]: value }));
-    }
-
-    function updateCouponField(name, value) {
-        setCouponForm((current) => ({ ...current, [name]: value }));
-    }
-
     function resetProductForm() {
         setProductForm(getEmptyProductForm());
+        setImagePreview("/assets/product_1.jpg");
     }
 
     function resetOrderForm() {
@@ -106,6 +204,21 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
 
     function resetCouponForm() {
         setCouponForm(getEmptyCouponForm());
+    }
+
+    function updateProductField(name, value) {
+        setProductForm((current) => ({ ...current, [name]: value }));
+        if (name === "image") {
+            setImagePreview(String(value || "") || "/assets/product_1.jpg");
+        }
+    }
+
+    function updateOrderField(name, value) {
+        setOrderForm((current) => ({ ...current, [name]: value }));
+    }
+
+    function updateCouponField(name, value) {
+        setCouponForm((current) => ({ ...current, [name]: value }));
     }
 
     async function handleLogout() {
@@ -128,6 +241,7 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
             image: product.image,
             featured: Boolean(product.featured),
         });
+        setImagePreview(product.image || "/assets/product_1.jpg");
         showStatus("success", `Editando produto ${product.name}.`);
     }
 
@@ -158,6 +272,24 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
         showStatus("success", `Editando cupom ${coupon.code}.`);
     }
 
+    async function handleImageUpload(event) {
+        const file = event.target.files?.[0];
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+            const imageSource = String(reader.result || "");
+            updateProductField("image", imageSource);
+            showStatus("success", "Imagem carregada com sucesso para este produto.");
+        };
+        reader.onerror = () => {
+            showStatus("warning", "Nao foi possivel carregar a imagem selecionada.");
+        };
+        reader.readAsDataURL(file);
+    }
+
     async function handleProductSubmit(event) {
         event.preventDefault();
         setIsSaving(true);
@@ -175,7 +307,7 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
             console.log("[AdminDashboard] Product response.", data);
 
             if (!response.ok) {
-                showStatus("warning", data.message || "NÃ£o foi possÃ­vel salvar o produto.");
+                showStatus("warning", data.message || "Nao foi possivel salvar o produto.");
                 return;
             }
 
@@ -210,7 +342,7 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
             console.log("[AdminDashboard] Order response.", data);
 
             if (!response.ok) {
-                showStatus("warning", data.message || "NÃ£o foi possÃ­vel salvar o pedido.");
+                showStatus("warning", data.message || "Nao foi possivel salvar o pedido.");
                 return;
             }
 
@@ -247,7 +379,7 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
             console.log("[AdminDashboard] Coupon response.", data);
 
             if (!response.ok) {
-                showStatus("warning", data.message || "NÃ£o foi possÃ­vel salvar o cupom.");
+                showStatus("warning", data.message || "Nao foi possivel salvar o cupom.");
                 return;
             }
 
@@ -266,6 +398,30 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
         }
     }
 
+    async function updateLeadStatus(lead, nextStatus) {
+        if (!canManage) {
+            return;
+        }
+
+        try {
+            const { response, data } = await sendAdminRequest("/api/admin/leads", "PATCH", {
+                ...lead,
+                status: nextStatus,
+            });
+
+            if (!response.ok) {
+                showStatus("warning", data.message || "Nao foi possivel atualizar o lead.");
+                return;
+            }
+
+            setLeads((currentLeads) => currentLeads.map((item) => (Number(item.id) === Number(data.lead.id) ? data.lead : item)));
+            showStatus("success", "Lead atualizado com sucesso.");
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to update lead.", error);
+            showStatus("warning", "Ocorreu um erro ao atualizar o lead.");
+        }
+    }
+
     async function handleDelete(entity, id) {
         if (!window.confirm("Deseja remover este item?")) {
             return;
@@ -277,20 +433,21 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
             console.log("[AdminDashboard] Delete response.", { entity, data });
 
             if (!response.ok) {
-                showStatus("warning", data.message || "NÃ£o foi possÃ­vel remover o item.");
+                showStatus("warning", data.message || "Nao foi possivel remover o item.");
                 return;
             }
 
             if (entity === "products") {
                 setProducts((current) => current.filter((item) => Number(item.id) !== Number(id)));
             }
-
             if (entity === "orders") {
                 setOrders((current) => current.filter((item) => Number(item.id) !== Number(id)));
             }
-
             if (entity === "coupons") {
                 setCoupons((current) => current.filter((item) => Number(item.id) !== Number(id)));
+            }
+            if (entity === "leads") {
+                setLeads((current) => current.filter((item) => Number(item.id) !== Number(id)));
             }
 
             showStatus("success", "Item removido com sucesso.");
@@ -315,53 +472,94 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
 
             <div className="admin-storage-banner">
                 <strong>Modo de armazenamento:</strong> {storageMode === "database" ? "PostgreSQL com Prisma" : "Fallback local em arquivo"}
-                {!canManage ? " â€¢ leitura apenas atÃ© configurar DATABASE_URL" : ""}
+                {!canManage ? " â€¢ leitura apenas ate configurar DATABASE_URL" : ""}
             </div>
 
             <div className="admin-metrics">
-                <MetricCard label="Total de produtos" value={products.length} />
-                <MetricCard label="Destaques ativos" value={totalFeatured} />
-                <MetricCard label="Pedidos cadastrados" value={orders.length} />
-                <MetricCard label="Receita total" value={`R$ ${totalRevenue.toFixed(2).replace(".", ",")}`} />
-                <MetricCard label="Cupons ativos" value={activeCoupons} />
+                <MetricCard label="Produtos" value={products.length} help="Itens no catalogo" />
+                <MetricCard label="Destaques" value={totalFeatured} help="Produtos em destaque" />
+                <MetricCard label="Pedidos" value={orders.length} help="Pedidos cadastrados" />
+                <MetricCard label="Receita" value={formatCurrency(totalRevenue)} help="Total somado dos pedidos" />
+                <MetricCard label="Cupons ativos" value={activeCoupons} help="Campanhas ativas" />
+                <MetricCard label="Leads abertos" value={openLeads} help="Contatos aguardando retorno" />
             </div>
 
-            <div className="admin-tabs">
-                <button type="button" className={`admin-tab ${activeTab === "products" ? "is-active" : ""}`} onClick={() => setActiveTab("products")}>
-                    Produtos
-                </button>
-                <button type="button" className={`admin-tab ${activeTab === "orders" ? "is-active" : ""}`} onClick={() => setActiveTab("orders")}>
-                    Pedidos
-                </button>
-                <button type="button" className={`admin-tab ${activeTab === "coupons" ? "is-active" : ""}`} onClick={() => setActiveTab("coupons")}>
-                    Cupons
-                </button>
+            <div className="admin-overview-grid">
+                <ChartCard title="Status dos pedidos" items={orderStatusChart.length ? orderStatusChart : [{ label: "sem dados", value: 0 }]} />
+                <ChartCard title="Origem dos leads" items={leadChannelChart.length ? leadChannelChart : [{ label: "sem dados", value: 0 }]} />
+            </div>
+
+            <div className="admin-toolbar">
+                <div className="admin-tabs">
+                    <button type="button" className={`admin-tab ${activeTab === "overview" ? "is-active" : ""}`} onClick={() => setActiveTab("overview")}>Visao geral</button>
+                    <button type="button" className={`admin-tab ${activeTab === "products" ? "is-active" : ""}`} onClick={() => setActiveTab("products")}>Produtos</button>
+                    <button type="button" className={`admin-tab ${activeTab === "orders" ? "is-active" : ""}`} onClick={() => setActiveTab("orders")}>Pedidos</button>
+                    <button type="button" className={`admin-tab ${activeTab === "coupons" ? "is-active" : ""}`} onClick={() => setActiveTab("coupons")}>Cupons</button>
+                    <button type="button" className={`admin-tab ${activeTab === "leads" ? "is-active" : ""}`} onClick={() => setActiveTab("leads")}>Leads</button>
+                </div>
+                <label className="field admin-search-field">
+                    <span>Buscar</span>
+                    <input value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder="Filtrar por nome, codigo, status ou canal" />
+                </label>
             </div>
 
             {statusMessage ? <p className={`form-status form-status-${statusType}`}>{statusMessage}</p> : null}
+
+            {activeTab === "overview" ? (
+                <div className="admin-grid">
+                    <section className="contact-card">
+                        <div className="section-heading">
+                            <h2>Resumo operacional</h2>
+                            <p>Use as abas para editar dados e acompanhe aqui a situacao geral da loja.</p>
+                        </div>
+                        <div className="admin-summary-grid">
+                            <div className="highlight-item">Produtos listados: {products.length}</div>
+                            <div className="highlight-item">Pedidos pendentes: {orders.filter((order) => order.status === "pending").length}</div>
+                            <div className="highlight-item">Cupons ativos: {activeCoupons}</div>
+                            <div className="highlight-item">Leads novos: {openLeads}</div>
+                        </div>
+                    </section>
+                    <section className="contact-card">
+                        <div className="section-heading">
+                            <h2>Proximas acoes</h2>
+                            <p>Atalhos para o time comercial.</p>
+                        </div>
+                        <div className="admin-product-list">
+                            <article className="admin-product-card"><div><strong>Atualizar destaques</strong><p>Revise quais produtos aparecem na home.</p></div></article>
+                            <article className="admin-product-card"><div><strong>Responder leads novos</strong><p>Priorize contatos com status new.</p></div></article>
+                            <article className="admin-product-card"><div><strong>Conferir cupons ativos</strong><p>Valide minimo, valor e uso total.</p></div></article>
+                        </div>
+                    </section>
+                </div>
+            ) : null}
 
             {activeTab === "products" ? (
                 <div className="admin-grid">
                     <section className="contact-card">
                         <div className="section-heading">
                             <h2>{productForm.id ? "Editar produto" : "Novo produto"}</h2>
-                            <p>Atualize o catÃ¡logo da vitrine com dados reais.</p>
+                            <p>Atualize o catalogo da vitrine com dados reais.</p>
                         </div>
 
                         <form className="form-grid" onSubmit={handleProductSubmit}>
                             <label className="field"><span>Nome</span><input value={productForm.name} onChange={(event) => updateProductField("name", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Categoria</span><input value={productForm.category} onChange={(event) => updateProductField("category", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field field-full"><span>DescriÃ§Ã£o</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>
+                            <label className="field field-full"><span>Descricao</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>
                             <label className="field"><span>Tamanhos</span><input value={productForm.sizes} onChange={(event) => updateProductField("sizes", event.target.value)} placeholder="P, M, G" required disabled={!canManage} /></label>
                             <label className="field"><span>Cores</span><input value={productForm.colors} onChange={(event) => updateProductField("colors", event.target.value)} placeholder="Preto, Areia" required disabled={!canManage} /></label>
-                            <label className="field"><span>PreÃ§o atual</span><input type="number" step="0.01" value={productForm.price} onChange={(event) => updateProductField("price", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>PreÃ§o antigo</span><input type="number" step="0.01" value={productForm.oldPrice} onChange={(event) => updateProductField("oldPrice", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Preco atual</span><input type="number" step="0.01" value={productForm.price} onChange={(event) => updateProductField("price", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Preco antigo</span><input type="number" step="0.01" value={productForm.oldPrice} onChange={(event) => updateProductField("oldPrice", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Selo</span><input value={productForm.badge} onChange={(event) => updateProductField("badge", event.target.value)} placeholder="-30% OFF" disabled={!canManage} /></label>
-                            <label className="field"><span>Imagem</span><input value={productForm.image} onChange={(event) => updateProductField("image", event.target.value)} placeholder="/assets/product_1.jpg" required disabled={!canManage} /></label>
+                            <label className="field"><span>Imagem por URL ou data URL</span><input value={productForm.image} onChange={(event) => updateProductField("image", event.target.value)} placeholder="/assets/product_1.jpg" required disabled={!canManage} /></label>
+                            <label className="field"><span>Upload de imagem</span><input type="file" accept="image/*" onChange={handleImageUpload} disabled={!canManage} /></label>
+                            <div className="field admin-image-preview field-full">
+                                <span>Preview</span>
+                                <img src={imagePreview} alt="Preview da imagem do produto" />
+                            </div>
                             <label className="field admin-checkbox-field"><span>Produto em destaque</span><input type="checkbox" checked={productForm.featured} onChange={(event) => updateProductField("featured", event.target.checked)} disabled={!canManage} /></label>
                             <div className="form-actions field-full">
                                 <button type="submit" className="primary-button" disabled={isSaving || !canManage}>{isSaving ? "Salvando..." : productForm.id ? "Atualizar produto" : "Criar produto"}</button>
-                                <button type="button" className="secondary-button" onClick={resetProductForm} disabled={!canManage}>Limpar formulÃ¡rio</button>
+                                <button type="button" className="secondary-button" onClick={resetProductForm} disabled={!canManage}>Limpar formulario</button>
                             </div>
                         </form>
                     </section>
@@ -369,15 +567,15 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
                     <section className="contact-card">
                         <div className="section-heading">
                             <h2>Produtos cadastrados</h2>
-                            <p>Clique em editar para carregar os dados no formulÃ¡rio.</p>
+                            <p>Filtrados por: {searchTerm || "todos"}</p>
                         </div>
                         <div className="admin-product-list">
-                            {products.map((product) => (
+                            {filteredProducts.map((product) => (
                                 <article key={product.id} className="admin-product-card">
                                     <div>
                                         <strong>{product.name}</strong>
                                         <p>{product.category}</p>
-                                        <span>{product.image}</span>
+                                        <span>{product.badge} â€¢ {formatCurrency(product.price)}</span>
                                     </div>
                                     <div className="admin-product-actions">
                                         <button type="button" className="text-button" onClick={() => startEditingProduct(product)} disabled={!canManage}>Editar</button>
@@ -397,7 +595,6 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
                             <h2>{orderForm.id ? "Editar pedido" : "Novo pedido"}</h2>
                             <p>Gerencie pedidos manuais e atualize status de atendimento.</p>
                         </div>
-
                         <form className="form-grid" onSubmit={handleOrderSubmit}>
                             <label className="field"><span>Cliente</span><input value={orderForm.customer} onChange={(event) => updateOrderField("customer", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Total</span><input type="number" step="0.01" value={orderForm.total} onChange={(event) => updateOrderField("total", event.target.value)} required disabled={!canManage} /></label>
@@ -406,7 +603,7 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
                             <label className="field"><span>Quantidade de itens</span><input type="number" value={orderForm.itemCount} onChange={(event) => updateOrderField("itemCount", event.target.value)} required disabled={!canManage} /></label>
                             <div className="form-actions field-full">
                                 <button type="submit" className="primary-button" disabled={isSaving || !canManage}>{isSaving ? "Salvando..." : orderForm.id ? "Atualizar pedido" : "Criar pedido"}</button>
-                                <button type="button" className="secondary-button" onClick={resetOrderForm} disabled={!canManage}>Limpar formulÃ¡rio</button>
+                                <button type="button" className="secondary-button" onClick={resetOrderForm} disabled={!canManage}>Limpar formulario</button>
                             </div>
                         </form>
                     </section>
@@ -414,15 +611,15 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
                     <section className="contact-card">
                         <div className="section-heading">
                             <h2>Pedidos cadastrados</h2>
-                            <p>Use para acompanhar e ajustar status operacionais.</p>
+                            <p>Filtrados por: {searchTerm || "todos"}</p>
                         </div>
                         <div className="admin-product-list">
-                            {orders.map((order) => (
+                            {filteredOrders.map((order) => (
                                 <article key={order.id} className="admin-product-card">
                                     <div>
                                         <strong>Pedido #{order.id} â€¢ {order.customer}</strong>
                                         <p>{order.status} â€¢ {order.channel}</p>
-                                        <span>{order.itemCount} item(ns) â€¢ R$ {Number(order.total).toFixed(2).replace(".", ",")}</span>
+                                        <span>{order.itemCount} item(ns) â€¢ {formatCurrency(order.total)}</span>
                                     </div>
                                     <div className="admin-product-actions">
                                         <button type="button" className="text-button" onClick={() => startEditingOrder(order)} disabled={!canManage}>Editar</button>
@@ -442,17 +639,16 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
                             <h2>{couponForm.id ? "Editar cupom" : "Novo cupom"}</h2>
                             <p>Cadastre regras promocionais para campanhas e descontos.</p>
                         </div>
-
                         <form className="form-grid" onSubmit={handleCouponSubmit}>
-                            <label className="field"><span>CÃ³digo</span><input value={couponForm.code} onChange={(event) => updateCouponField("code", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Codigo</span><input value={couponForm.code} onChange={(event) => updateCouponField("code", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Tipo</span><input value={couponForm.type} onChange={(event) => updateCouponField("type", event.target.value)} placeholder="percent ou fixed" required disabled={!canManage} /></label>
                             <label className="field"><span>Valor</span><input type="number" step="0.01" value={couponForm.value} onChange={(event) => updateCouponField("value", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Pedido mÃ­nimo</span><input type="number" step="0.01" value={couponForm.minOrder} onChange={(event) => updateCouponField("minOrder", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Pedido minimo</span><input type="number" step="0.01" value={couponForm.minOrder} onChange={(event) => updateCouponField("minOrder", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Uso total</span><input type="number" value={couponForm.usageCount} onChange={(event) => updateCouponField("usageCount", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field admin-checkbox-field"><span>Cupom ativo</span><input type="checkbox" checked={couponForm.active} onChange={(event) => updateCouponField("active", event.target.checked)} disabled={!canManage} /></label>
                             <div className="form-actions field-full">
                                 <button type="submit" className="primary-button" disabled={isSaving || !canManage}>{isSaving ? "Salvando..." : couponForm.id ? "Atualizar cupom" : "Criar cupom"}</button>
-                                <button type="button" className="secondary-button" onClick={resetCouponForm} disabled={!canManage}>Limpar formulÃ¡rio</button>
+                                <button type="button" className="secondary-button" onClick={resetCouponForm} disabled={!canManage}>Limpar formulario</button>
                             </div>
                         </form>
                     </section>
@@ -460,19 +656,48 @@ export function AdminDashboard({ initialProducts, initialOrders, initialCoupons,
                     <section className="contact-card">
                         <div className="section-heading">
                             <h2>Cupons cadastrados</h2>
-                            <p>Controle campanhas, pedido mÃ­nimo e uso total.</p>
+                            <p>Filtrados por: {searchTerm || "todos"}</p>
                         </div>
                         <div className="admin-product-list">
-                            {coupons.map((coupon) => (
+                            {filteredCoupons.map((coupon) => (
                                 <article key={coupon.id} className="admin-product-card">
                                     <div>
                                         <strong>{coupon.code}</strong>
                                         <p>{coupon.type} â€¢ {coupon.active ? "ativo" : "inativo"}</p>
-                                        <span>Valor {coupon.value} â€¢ mÃ­nimo {coupon.minOrder} â€¢ uso {coupon.usageCount}</span>
+                                        <span>Valor {coupon.value} â€¢ minimo {coupon.minOrder} â€¢ uso {coupon.usageCount}</span>
                                     </div>
                                     <div className="admin-product-actions">
                                         <button type="button" className="text-button" onClick={() => startEditingCoupon(coupon)} disabled={!canManage}>Editar</button>
                                         <button type="button" className="text-button admin-delete-button" onClick={() => handleDelete("coupons", coupon.id)} disabled={!canManage}>Remover</button>
+                                    </div>
+                                </article>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+            ) : null}
+
+            {activeTab === "leads" ? (
+                <div className="admin-grid admin-grid-single">
+                    <section className="contact-card">
+                        <div className="section-heading">
+                            <h2>Leads recebidos</h2>
+                            <p>Filtrados por: {searchTerm || "todos"}. Atualize status ou remova contatos antigos.</p>
+                        </div>
+                        <div className="admin-product-list">
+                            {filteredLeads.map((lead) => (
+                                <article key={lead.id} className="admin-product-card admin-lead-card">
+                                    <div>
+                                        <strong>{lead.name}</strong>
+                                        <p>{lead.subject}</p>
+                                        <span>{lead.email || "sem email"} â€¢ {lead.phone || "sem telefone"}</span>
+                                        <p>{lead.message}</p>
+                                        <span>{lead.channel} â€¢ {lead.status}</span>
+                                    </div>
+                                    <div className="admin-product-actions">
+                                        <button type="button" className="text-button" onClick={() => updateLeadStatus(lead, "contacted")} disabled={!canManage}>Marcar contato</button>
+                                        <button type="button" className="text-button" onClick={() => updateLeadStatus(lead, "closed")} disabled={!canManage}>Fechar</button>
+                                        <button type="button" className="text-button admin-delete-button" onClick={() => handleDelete("leads", lead.id)} disabled={!canManage}>Remover</button>
                                     </div>
                                 </article>
                             ))}

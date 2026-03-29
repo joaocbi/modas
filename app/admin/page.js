@@ -1,5 +1,6 @@
 import { AdminDashboard } from "../../components/admin-dashboard";
 import { getAllCoupons } from "../../lib/coupon-store";
+import { getAllLeads } from "../../lib/lead-store";
 import { getAllOrders } from "../../lib/order-store";
 import { getAllProducts, getStorageMode, isAdminMutationEnabled } from "../../lib/product-store";
 import { getAdminSession } from "../../lib/admin-session";
@@ -12,10 +13,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
     const session = await getAdminSession();
-    const [products, orders, coupons] = await Promise.all([
+    const [products, orders, coupons, leads] = await Promise.all([
         getAllProducts(),
         getAllOrders(),
         getAllCoupons(),
+        getAllLeads(),
     ]);
     const storageMode = getStorageMode();
     const canManage = isAdminMutationEnabled();
@@ -25,6 +27,7 @@ export default async function AdminPage() {
             initialProducts={products}
             initialOrders={orders}
             initialCoupons={coupons}
+            initialLeads={leads}
             adminEmail={session?.email || "admin"}
             storageMode={storageMode}
             canManage={canManage}

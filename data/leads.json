@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "name": "Larissa Souza",
+    "email": "larissa@example.com",
+    "phone": "(11) 99999-0001",
+    "subject": "Interesse em conjunto",
+    "message": "Quero saber se o Conjunto Linho tem disponibilidade no tamanho M.",
+    "channel": "email",
+    "status": "new"
+  },
+  {
+    "id": 2,
+    "name": "Renata Lima",
+    "email": "renata@example.com",
+    "phone": "(11) 99999-0002",
+    "subject": "Newsletter",
+    "message": "Quero receber novidades e promocoes da loja.",
+    "channel": "whatsapp",
+    "status": "contacted"
+  }
+]

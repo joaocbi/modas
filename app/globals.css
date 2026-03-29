@@ -770,6 +770,21 @@ img {
     gap: 24px;
 }
 
+.admin-overview-grid,
+.admin-summary-grid {
+    display: grid;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.admin-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.admin-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .admin-tabs {
     display: flex;
     flex-wrap: wrap;
@@ -800,6 +815,18 @@ img {
     color: var(--color-accent-strong);
 }
 
+.admin-toolbar {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: end;
+    margin-bottom: 24px;
+}
+
+.admin-search-field {
+    align-self: end;
+}
+
 .admin-topbar {
     grid-template-columns: 1fr auto;
     align-items: end;
@@ -818,6 +845,48 @@ img {
 
 .admin-grid {
     grid-template-columns: 1.1fr 0.9fr;
+}
+
+.admin-grid-single {
+    grid-template-columns: 1fr;
+}
+
+.admin-metric-card p,
+.admin-chart-card p {
+    margin: 8px 0 0;
+    color: var(--color-text-muted);
+}
+
+.admin-chart-list {
+    display: grid;
+    gap: 16px;
+    margin-top: 18px;
+}
+
+.admin-chart-row {
+    display: grid;
+    gap: 8px;
+}
+
+.admin-chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.admin-chart-track {
+    width: 100%;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(138, 133, 102, 0.14);
+}
+
+.admin-chart-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--color-accent), var(--color-accent-strong));
 }
 
 .admin-checkbox-field {
@@ -861,6 +930,18 @@ img {
 
 .admin-delete-button {
     color: #9c2f2f;
+}
+
+.admin-image-preview img {
+    width: 100%;
+    max-width: 260px;
+    border-radius: 18px;
+    border: 1px solid var(--color-border);
+    background: #ffffff;
+}
+
+.admin-lead-card p:last-of-type {
+    margin-top: 12px;
 }
 
 .site-footer {
@@ -932,6 +1013,9 @@ img {
     .admin-grid,
     .admin-topbar,
     .admin-metrics,
+    .admin-overview-grid,
+    .admin-summary-grid,
+    .admin-toolbar,
     .two-column,
     .footer-grid,
     .benefits-bar {
