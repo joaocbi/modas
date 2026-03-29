@@ -2,14 +2,20 @@ import Link from "next/link";
 import { ContactForm } from "../components/contact-form";
 import { HeroSlider } from "../components/hero-slider";
 import { ProductGrid } from "../components/product-grid";
-import { benefits, contactHighlights, products, promotions } from "../data/store";
+import { benefits, contactHighlights, promotions } from "../data/store";
+import { getAllProducts } from "../lib/product-store";
 
 const newsletterFields = [
     { name: "name", label: "Seu nome", type: "text", placeholder: "Como podemos te chamar?" },
     { name: "email", label: "Seu e-mail", type: "email", placeholder: "Digite seu melhor e-mail" },
 ];
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+    const products = await getAllProducts();
+    const featuredProducts = products.filter((product) => product.featured);
+
     return (
         <main>
             <section className="benefits-bar">
@@ -46,7 +52,7 @@ export default function HomePage() {
                     <p className="section-kicker">Coleção Golden Hour</p>
                     <h2>Peças com visual leve, acabamento premium e caimento impecável</h2>
                 </div>
-                <ProductGrid items={products.filter((product) => product.featured)} />
+                <ProductGrid items={featuredProducts} />
                 <div className="section-actions">
                     <Link href="/produtos" className="secondary-button">
                         Ver todos os produtos

@@ -1,12 +1,16 @@
 import { Breadcrumb } from "../../components/breadcrumb";
 import { ProductGrid } from "../../components/product-grid";
-import { products } from "../../data/store";
+import { getAllProducts } from "../../lib/product-store";
 
 export const metadata = {
     title: "Produtos | DeVille Fashion",
 };
 
-export default function ProductsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProductsPage() {
+    const products = await getAllProducts();
+
     return (
         <main className="page-shell">
             <Breadcrumb currentPage="Produtos" />
