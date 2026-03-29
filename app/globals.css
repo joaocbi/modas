@@ -289,6 +289,28 @@ img {
     gap: 14px;
 }
 
+.form-actions button:disabled {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.form-status {
+    margin: 0;
+    padding: 14px 16px;
+    border-radius: 14px;
+    font-size: 0.95rem;
+}
+
+.form-status-success {
+    background: rgba(37, 211, 102, 0.12);
+    color: #15763c;
+}
+
+.form-status-warning {
+    background: rgba(203, 59, 59, 0.1);
+    color: #8f2f2f;
+}
+
 .hero-actions {
     margin-top: 28px;
 }

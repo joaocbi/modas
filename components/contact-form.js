@@ -9,6 +9,9 @@ function getInitialState(fields) {
 
 export function ContactForm({ title, description, subject, fields, compact = false }) {
     const [formValues, setFormValues] = useState(() => getInitialState(fields));
+    const [statusMessage, setStatusMessage] = useState("");
+    const [statusType, setStatusType] = useState("idle");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const filledFields = useMemo(
         () =>
@@ -30,16 +33,61 @@ export function ContactForm({ title, description, subject, fields, compact = fal
         return `${subject}\n\n${buildFieldLines(filledFields)}`;
     }
 
+    function getReplyTo() {
+        const emailField = fields.find((field) => field.type === "email");
+        return emailField ? formValues[emailField.name] : "";
+    }
+
     function handleWhatsApp() {
         const message = buildMessage();
         console.log("[ContactForm] Redirecting to WhatsApp.", { subject, formValues });
         window.open(buildWhatsAppUrl(message), "_blank", "noopener,noreferrer");
     }
 
-    function handleEmail() {
+    async function handleEmail() {
         const message = buildMessage();
-        console.log("[ContactForm] Redirecting to e-mail.", { subject, formValues });
-        window.location.href = buildMailtoUrl({ subject, body: message });
+        const replyTo = getReplyTo();
+
+        setIsSubmitting(true);
+        setStatusMessage("");
+        setStatusType("idle");
+
+        try {
+            console.log("[ContactForm] Sending e-mail using API.", { subject, formValues });
+
+            const response = await fetch("/api/contact", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    subject,
+                    body: message,
+                    replyTo,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                console.log("[ContactForm] API e-mail failed. Falling back to mailto.", data);
+                window.location.href = buildMailtoUrl({ subject, body: message });
+                setStatusType("warning");
+                setStatusMessage("O envio direto não está configurado ainda. Abrimos seu aplicativo de e-mail como alternativa.");
+                return;
+            }
+
+            setStatusType("success");
+            setStatusMessage("Mensagem enviada com sucesso.");
+            setFormValues(getInitialState(fields));
+        } catch (error) {
+            console.log("[ContactForm] Unexpected error during e-mail send. Falling back to mailto.", error);
+            window.location.href = buildMailtoUrl({ subject, body: message });
+            setStatusType("warning");
+            setStatusMessage("Ocorreu um erro no envio direto. Abrimos seu aplicativo de e-mail como alternativa.");
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     return (
@@ -76,10 +124,12 @@ export function ContactForm({ title, description, subject, fields, compact = fal
                 <button type="button" className="primary-button" onClick={handleWhatsApp}>
                     Enviar por WhatsApp
                 </button>
-                <button type="button" className="secondary-button" onClick={handleEmail}>
-                    Enviar por e-mail
+                <button type="button" className="secondary-button" onClick={handleEmail} disabled={isSubmitting}>
+                    {isSubmitting ? "Enviando..." : "Enviar por e-mail"}
                 </button>
             </div>
+
+            {statusMessage ? <p className={`form-status form-status-${statusType}`}>{statusMessage}</p> : null}
         </section>
     );
 }
