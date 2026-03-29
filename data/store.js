@@ -1,0 +1,214 @@
+import { buildWhatsAppUrl } from "../lib/contact";
+
+export const store = {
+    name: "DeVille Fashion",
+    email: "devillefashions@gmail.com",
+    whatsapp: "551234567890",
+    instagram: "#",
+    supportHours: [
+        "Segunda a sexta das 09h às 18h",
+        "Sábado das 09h às 13h",
+    ],
+};
+
+export const navigation = [
+    { label: "Início", href: "/" },
+    { label: "Produtos", href: "/produtos" },
+    { label: "Contato", href: "/contato" },
+    { label: "Retirada", href: "/retirada" },
+    { label: "Políticas de trocas", href: "/politicas-de-trocas" },
+    { label: "Perguntas frequentes", href: "/perguntas-frequentes" },
+    { label: "Como comprar", href: "/como-comprar" },
+];
+
+export const benefits = [
+    { title: "Frete grátis", description: "Condições especiais para pedidos selecionados." },
+    { title: "Trocas grátis", description: "Atendimento rápido para ajustes e trocas." },
+    { title: "Desconto no Pix", description: "Condições diferenciadas para pagamentos à vista." },
+];
+
+export const heroSlides = [
+    {
+        image: "/assets/hero_1.jpg",
+        eyebrow: "Coleção FAV'S Drop",
+        title: "Moda feminina com presença, leveza e sofisticação.",
+        description: "Peças selecionadas para valorizar o caimento e destacar o seu estilo em qualquer ocasião.",
+    },
+    {
+        image: "/assets/hero_2.jpg",
+        eyebrow: "Nova coleção",
+        title: "Looks pensados para o dia a dia e para momentos especiais.",
+        description: "Explore combinações elegantes com acabamento premium e identidade marcante.",
+    },
+];
+
+export const promotions = [
+    { image: "/assets/promo_1.jpg", title: "Seleção especial", subtitle: "Peças com acabamento elegante e toque leve." },
+    { image: "/assets/promo_2.jpg", title: "Essenciais da estação", subtitle: "Modelos versáteis para compor produções refinadas." },
+];
+
+export const products = [
+    {
+        id: 1,
+        name: "Conjunto Linho",
+        description: "Conjunto sofisticado em linho com caimento leve e acabamento premium.",
+        category: "Conjuntos",
+        sizes: ["P", "M", "G"],
+        colors: ["Areia", "Off White"],
+        price: 116.66,
+        oldPrice: 166.65,
+        badge: "-30% OFF",
+        image: "/assets/product_1.jpg",
+        featured: true,
+    },
+    {
+        id: 2,
+        name: "Macaquinho Cleane",
+        description: "Macaquinho moderno para looks versáteis e elegantes.",
+        category: "Macaquinhos",
+        sizes: ["P", "M"],
+        colors: ["Preto", "Verde"],
+        price: 120.54,
+        oldPrice: 172.2,
+        badge: "-30% OFF",
+        image: "/assets/product_2.jpg",
+        featured: true,
+    },
+    {
+        id: 3,
+        name: "Conjunto Evelly",
+        description: "Modelo feminino com visual contemporâneo para uso diário.",
+        category: "Conjuntos",
+        sizes: ["M", "G"],
+        colors: ["Rosado", "Bege"],
+        price: 116.67,
+        oldPrice: 166.67,
+        badge: "-30% OFF",
+        image: "/assets/product_3.jpg",
+        featured: true,
+    },
+    {
+        id: 4,
+        name: "Macaquinho Yasmin",
+        description: "Peça curinga para compor produções leves e refinadas.",
+        category: "Macaquinhos",
+        sizes: ["P", "M", "G"],
+        colors: ["Azul", "Preto"],
+        price: 110.18,
+        oldPrice: 157.4,
+        badge: "-30% OFF",
+        image: "/assets/product_4.jpg",
+        featured: true,
+    },
+    {
+        id: 5,
+        name: "Vestido Aurora",
+        description: "Vestido com acabamento elegante e proposta premium para ocasiões especiais.",
+        category: "Vestidos",
+        sizes: ["M", "G"],
+        colors: ["Marsala"],
+        price: 189.9,
+        oldPrice: 229.9,
+        badge: "Novo",
+        image: "/assets/product_1.jpg",
+        featured: false,
+    },
+];
+
+export const howToBuySteps = [
+    {
+        title: "Curadoria exclusiva",
+        description: "Explore peças com imagens de alta definição, descrições claras e informações de modelagem para uma escolha segura.",
+    },
+    {
+        title: "Escolha sob medida",
+        description: "Selecione o tamanho ideal, consulte as medidas e finalize seu interesse diretamente com a equipe.",
+    },
+    {
+        title: "Revisão do pedido",
+        description: "Confirme o produto, a cor, o tamanho e as condições de pagamento antes de concluir pelo canal de atendimento.",
+    },
+    {
+        title: "Recebimento flexível",
+        description: "Defina se prefere entrega no endereço ou retirada em loja com atendimento personalizado.",
+    },
+];
+
+export const pickupDetails = [
+    {
+        title: "Horário para retirada",
+        items: ["Segunda a sexta: das 09h às 18h", "Sábado: das 09h às 13h"],
+    },
+    {
+        title: "Prazo para retirada",
+        items: [
+            "A equipe avisa quando o pedido estiver disponível.",
+            "Após a liberação, o prazo para retirada é de até 3 dias corridos.",
+        ],
+    },
+    {
+        title: "O que apresentar",
+        items: ["Documento com foto", "Número do pedido ou comprovante da compra"],
+    },
+    {
+        title: "Retirada por terceiros",
+        items: [
+            "Autorização do titular da compra",
+            "Documento com foto do responsável pela retirada",
+            "Cópia ou foto do documento do comprador",
+        ],
+    },
+];
+
+export const exchangeSections = [
+    {
+        title: "Trocas por defeito",
+        description: "O prazo para solicitar troca por defeito é de até 30 dias corridos após o recebimento do produto.",
+        items: ["Troca pelo mesmo produto", "Crédito na loja", "Reembolso do valor pago"],
+    },
+    {
+        title: "Trocas por tamanho ou preferência",
+        description: "As solicitações podem ser feitas em até 7 dias corridos, com produto sem uso e com etiqueta original.",
+        items: [
+            "Produto sem sinais de uso",
+            "Etiqueta original afixada",
+            "Disponibilidade sujeita ao estoque",
+        ],
+    },
+    {
+        title: "Condições que não permitem troca",
+        description: "Não são aceitos produtos com sinais de uso, lavagem, odor ou danos por mau uso.",
+        items: ["Sem etiqueta original", "Danificados pelo uso", "Itens promocionais sem defeito de fabricação"],
+    },
+];
+
+export const faqItems = [
+    {
+        question: "Como faço para comprar?",
+        answer: "Você pode navegar pela coleção, escolher a peça desejada e falar com a equipe pelo WhatsApp para concluir o atendimento de forma rápida.",
+    },
+    {
+        question: "Posso retirar o pedido na loja?",
+        answer: "Sim. A retirada pode ser feita em horário comercial após a confirmação de disponibilidade enviada pela equipe.",
+    },
+    {
+        question: "Vocês fazem troca por tamanho?",
+        answer: "Sim. Trocas por tamanho ou preferência podem ser solicitadas em até 7 dias corridos após o recebimento, com o produto sem uso.",
+    },
+    {
+        question: "Quais formas de pagamento vocês aceitam?",
+        answer: "Trabalhamos com Pix e cartão de crédito, com condições especiais para pagamentos à vista conforme a campanha vigente.",
+    },
+];
+
+export const contactHighlights = [
+    "Atendimento humanizado e rápido.",
+    "Suporte por WhatsApp e e-mail real.",
+    "Auxílio para pedidos, trocas, retirada e cadastro.",
+];
+
+export function getProductWhatsAppLink(product) {
+    return buildWhatsAppUrl(
+        `Olá, tenho interesse no produto ${product.name}.\nCategoria: ${product.category}\nValor: R$ ${product.price.toFixed(2).replace(".", ",")}`
+    );
+}
