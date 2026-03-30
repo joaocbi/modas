@@ -7,19 +7,26 @@ datasource db {
 }
 
 model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  category    String
-  sizes       String[]
-  colors      String[]
-  price       Decimal  @db.Decimal(10, 2)
-  oldPrice    Decimal  @db.Decimal(10, 2)
-  badge       String
-  image       String
-  featured    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                 Int      @id @default(autoincrement())
+  name               String
+  description        String
+  category           String
+  subcategory        String   @default("")
+  sizes              String[]
+  colors             String[]
+  price              Decimal  @db.Decimal(10, 2)
+  oldPrice           Decimal  @db.Decimal(10, 2)
+  costPrice          Decimal  @db.Decimal(10, 2) @default(0)
+  salesFeePercentage Decimal  @db.Decimal(5, 2) @default(0)
+  totalCost          Decimal  @db.Decimal(10, 2) @default(0)
+  paymentMethods     String[] @default([])
+  mercadoPagoEnabled Boolean  @default(false)
+  mercadoPagoLink    String   @default("")
+  badge              String
+  image              String
+  featured           Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
 }
 
 model Order {

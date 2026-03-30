@@ -1,6 +1,12 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débito", "Boleto", "Mercado Pago"];
+
+function calculateTotalCost(price, costPrice, salesFeePercentage) {
+    return Number((Number(costPrice || 0) + Number(price || 0) * (Number(salesFeePercentage || 0) / 100)).toFixed(2));
+}
 
 function getEmptyProductForm() {
     return {
@@ -8,10 +14,17 @@ function getEmptyProductForm() {
         name: "",
         description: "",
         category: "",
+        subcategory: "",
         sizes: "",
         colors: "",
+        paymentMethods: ["Pix", "Cartão de crédito", "Mercado Pago"],
         price: "",
         oldPrice: "",
+        costPrice: "",
+        salesFeePercentage: "5",
+        totalCost: "0.00",
+        mercadoPagoEnabled: false,
+        mercadoPagoLink: "",
         badge: "",
         image: "/assets/product_1.jpg",
         featured: true,
@@ -46,6 +59,10 @@ function formatCurrency(value) {
         style: "currency",
         currency: "BRL",
     }).format(Number(value || 0));
+}
+
+function formatPercent(value) {
+    return `${Number(value || 0).toFixed(2).replace(".", ",")}%`;
 }
 
 async function sendAdminRequest(url, method, payload) {
@@ -116,6 +133,7 @@ export function AdminDashboard({
     const [statusType, setStatusType] = useState("success");
     const [isSaving, setIsSaving] = useState(false);
     const [imagePreview, setImagePreview] = useState("/assets/product_1.jpg");
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
     const totalFeatured = useMemo(() => products.filter((product) => product.featured).length, [products]);
     const totalRevenue = useMemo(() => orders.reduce((sum, order) => sum + Number(order.total || 0), 0), [orders]);
@@ -149,7 +167,13 @@ export function AdminDashboard({
         }
 
         return products.filter((product) =>
-            [product.name, product.category, product.badge].some((value) => String(value || "").toLowerCase().includes(normalizedSearch))
+            [
+                product.name,
+                product.category,
+                product.subcategory,
+                product.badge,
+                ...(product.paymentMethods || []),
+            ].some((value) => String(value || "").toLowerCase().includes(normalizedSearch))
         );
     }, [products, searchTerm]);
 
@@ -198,6 +222,17 @@ export function AdminDashboard({
         setImagePreview("/assets/product_1.jpg");
     }
 
+    function openNewProductModal() {
+        resetProductForm();
+        setIsProductModalOpen(true);
+        showStatus("success", "Preencha os dados para cadastrar um novo produto.");
+    }
+
+    function closeProductModal() {
+        setIsProductModalOpen(false);
+        resetProductForm();
+    }
+
     function resetOrderForm() {
         setOrderForm(getEmptyOrderForm());
     }
@@ -207,10 +242,34 @@ export function AdminDashboard({
     }
 
     function updateProductField(name, value) {
-        setProductForm((current) => ({ ...current, [name]: value }));
+        setProductForm((current) => {
+            const nextProductForm = { ...current, [name]: value };
+            if (["price", "costPrice", "salesFeePercentage"].includes(name)) {
+                nextProductForm.totalCost = String(
+                    calculateTotalCost(nextProductForm.price, nextProductForm.costPrice, nextProductForm.salesFeePercentage)
+                );
+            }
+            return nextProductForm;
+        });
+
         if (name === "image") {
             setImagePreview(String(value || "") || "/assets/product_1.jpg");
         }
+    }
+
+    function togglePaymentMethod(method) {
+        setProductForm((current) => {
+            const hasMethod = current.paymentMethods.includes(method);
+            const nextPaymentMethods = hasMethod
+                ? current.paymentMethods.filter((item) => item !== method)
+                : [...current.paymentMethods, method];
+
+            return {
+                ...current,
+                paymentMethods: nextPaymentMethods,
+                mercadoPagoEnabled: method === "Mercado Pago" ? !hasMethod || current.mercadoPagoEnabled : current.mercadoPagoEnabled,
+            };
+        });
     }
 
     function updateOrderField(name, value) {
@@ -233,15 +292,23 @@ export function AdminDashboard({
             name: product.name,
             description: product.description,
             category: product.category,
+            subcategory: product.subcategory || "",
             sizes: product.sizes.join(", "),
             colors: product.colors.join(", "),
+            paymentMethods: product.paymentMethods || [],
             price: String(product.price),
             oldPrice: String(product.oldPrice),
+            costPrice: String(product.costPrice || 0),
+            salesFeePercentage: String(product.salesFeePercentage || 0),
+            totalCost: String(product.totalCost || 0),
+            mercadoPagoEnabled: Boolean(product.mercadoPagoEnabled),
+            mercadoPagoLink: product.mercadoPagoLink || "",
             badge: product.badge,
             image: product.image,
             featured: Boolean(product.featured),
         });
         setImagePreview(product.image || "/assets/product_1.jpg");
+        setIsProductModalOpen(true);
         showStatus("success", `Editando produto ${product.name}.`);
     }
 
@@ -301,7 +368,11 @@ export function AdminDashboard({
                 ...productForm,
                 price: Number(productForm.price || 0),
                 oldPrice: Number(productForm.oldPrice || 0),
+                costPrice: Number(productForm.costPrice || 0),
+                salesFeePercentage: Number(productForm.salesFeePercentage || 0),
+                totalCost: Number(productForm.totalCost || 0),
                 featured: Boolean(productForm.featured),
+                mercadoPagoEnabled: Boolean(productForm.mercadoPagoEnabled),
             };
             const { response, data } = await sendAdminRequest("/api/admin/products", isEditing ? "PATCH" : "POST", payload);
             console.log("[AdminDashboard] Product response.", data);
@@ -316,7 +387,7 @@ export function AdminDashboard({
                     ? currentProducts.map((product) => (Number(product.id) === Number(data.product.id) ? data.product : product))
                     : [...currentProducts, data.product]
             );
-            resetProductForm();
+            closeProductModal();
             showStatus("success", isEditing ? "Produto atualizado com sucesso." : "Produto criado com sucesso.");
         } catch (error) {
             console.log("[AdminDashboard] Failed to save product.", error);
@@ -325,6 +396,19 @@ export function AdminDashboard({
             setIsSaving(false);
         }
     }
+
+    useEffect(() => {
+        if (!isProductModalOpen) {
+            return undefined;
+        }
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
+    }, [isProductModalOpen]);
 
     async function handleOrderSubmit(event) {
         event.preventDefault();
@@ -534,48 +618,37 @@ export function AdminDashboard({
             ) : null}
 
             {activeTab === "products" ? (
-                <div className="admin-grid">
-                    <section className="contact-card">
-                        <div className="section-heading">
-                            <h2>{productForm.id ? "Editar produto" : "Novo produto"}</h2>
-                            <p>Atualize o catalogo da vitrine com dados reais.</p>
-                        </div>
-
-                        <form className="form-grid" onSubmit={handleProductSubmit}>
-                            <label className="field"><span>Nome</span><input value={productForm.name} onChange={(event) => updateProductField("name", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Categoria</span><input value={productForm.category} onChange={(event) => updateProductField("category", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field field-full"><span>Descricao</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>
-                            <label className="field"><span>Tamanhos</span><input value={productForm.sizes} onChange={(event) => updateProductField("sizes", event.target.value)} placeholder="P, M, G" required disabled={!canManage} /></label>
-                            <label className="field"><span>Cores</span><input value={productForm.colors} onChange={(event) => updateProductField("colors", event.target.value)} placeholder="Preto, Areia" required disabled={!canManage} /></label>
-                            <label className="field"><span>Preco atual</span><input type="number" step="0.01" value={productForm.price} onChange={(event) => updateProductField("price", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Preco antigo</span><input type="number" step="0.01" value={productForm.oldPrice} onChange={(event) => updateProductField("oldPrice", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Selo</span><input value={productForm.badge} onChange={(event) => updateProductField("badge", event.target.value)} placeholder="-30% OFF" disabled={!canManage} /></label>
-                            <label className="field"><span>Imagem por URL ou data URL</span><input value={productForm.image} onChange={(event) => updateProductField("image", event.target.value)} placeholder="/assets/product_1.jpg" required disabled={!canManage} /></label>
-                            <label className="field"><span>Upload de imagem</span><input type="file" accept="image/*" onChange={handleImageUpload} disabled={!canManage} /></label>
-                            <div className="field admin-image-preview field-full">
-                                <span>Preview</span>
-                                <img src={imagePreview} alt="Preview da imagem do produto" />
-                            </div>
-                            <label className="field admin-checkbox-field"><span>Produto em destaque</span><input type="checkbox" checked={productForm.featured} onChange={(event) => updateProductField("featured", event.target.checked)} disabled={!canManage} /></label>
-                            <div className="form-actions field-full">
-                                <button type="submit" className="primary-button" disabled={isSaving || !canManage}>{isSaving ? "Salvando..." : productForm.id ? "Atualizar produto" : "Criar produto"}</button>
-                                <button type="button" className="secondary-button" onClick={resetProductForm} disabled={!canManage}>Limpar formulario</button>
-                            </div>
-                        </form>
-                    </section>
-
+                <div className="admin-grid admin-grid-single">
                     <section className="contact-card">
                         <div className="section-heading">
                             <h2>Produtos cadastrados</h2>
-                            <p>Filtrados por: {searchTerm || "todos"}</p>
+                            <p>Cadastre, edite e remova produtos pelo modal de manutenção.</p>
+                        </div>
+                        <div className="section-actions admin-section-actions">
+                            <button type="button" className="primary-button" onClick={openNewProductModal} disabled={!canManage}>
+                                Novo produto
+                            </button>
                         </div>
                         <div className="admin-product-list">
                             {filteredProducts.map((product) => (
                                 <article key={product.id} className="admin-product-card">
                                     <div>
                                         <strong>{product.name}</strong>
-                                        <p>{product.category}</p>
-                                        <span>{product.badge} â€¢ {formatCurrency(product.price)}</span>
+                                        <p>
+                                            {product.category}
+                                            {product.subcategory ? ` • ${product.subcategory}` : ""}
+                                        </p>
+                                        <span>
+                                            {product.badge} • Venda {formatCurrency(product.price)} • Custo {formatCurrency(product.totalCost)}
+                                        </span>
+                                        <span>
+                                            Taxa {formatPercent(product.salesFeePercentage)} • Lucro estimado{" "}
+                                            {formatCurrency(Number(product.price || 0) - Number(product.totalCost || 0))}
+                                        </span>
+                                        <span>Pagamentos: {(product.paymentMethods || []).join(" • ") || "Não informado"}</span>
+                                        {product.mercadoPagoEnabled ? (
+                                            <span>Mercado Pago ativo{product.mercadoPagoLink ? " com link configurado" : ""}</span>
+                                        ) : null}
                                     </div>
                                     <div className="admin-product-actions">
                                         <button type="button" className="text-button" onClick={() => startEditingProduct(product)} disabled={!canManage}>Editar</button>
@@ -702,6 +775,72 @@ export function AdminDashboard({
                                 </article>
                             ))}
                         </div>
+                    </section>
+                </div>
+            ) : null}
+
+            {isProductModalOpen ? (
+                <div className="admin-modal-backdrop" role="presentation" onClick={closeProductModal}>
+                    <section
+                        className="admin-modal-card"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={productForm.id ? "Editar produto" : "Cadastrar produto"}
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <div className="admin-modal-header">
+                            <div>
+                                <p className="section-kicker">Manutenção de produto</p>
+                                <h2>{productForm.id ? "Editar produto" : "Cadastrar produto"}</h2>
+                            </div>
+                            <button type="button" className="secondary-button" onClick={closeProductModal}>
+                                Fechar
+                            </button>
+                        </div>
+
+                        <form className="form-grid" onSubmit={handleProductSubmit}>
+                            <label className="field"><span>Nome</span><input value={productForm.name} onChange={(event) => updateProductField("name", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Categoria</span><input value={productForm.category} onChange={(event) => updateProductField("category", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Subcategoria</span><input value={productForm.subcategory} onChange={(event) => updateProductField("subcategory", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Tamanhos</span><input value={productForm.sizes} onChange={(event) => updateProductField("sizes", event.target.value)} placeholder="P, M, G" required disabled={!canManage} /></label>
+                            <label className="field"><span>Cores</span><input value={productForm.colors} onChange={(event) => updateProductField("colors", event.target.value)} placeholder="Preto, Areia" required disabled={!canManage} /></label>
+                            <label className="field field-full"><span>Descrição</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>
+                            <label className="field"><span>Preço de venda</span><input type="number" step="0.01" value={productForm.price} onChange={(event) => updateProductField("price", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Preço antigo</span><input type="number" step="0.01" value={productForm.oldPrice} onChange={(event) => updateProductField("oldPrice", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Custo do produto</span><input type="number" step="0.01" value={productForm.costPrice} onChange={(event) => updateProductField("costPrice", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Porcentagem sobre vendas</span><input type="number" step="0.01" value={productForm.salesFeePercentage} onChange={(event) => updateProductField("salesFeePercentage", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Custo total</span><input type="number" step="0.01" value={productForm.totalCost} readOnly disabled /></label>
+                            <label className="field"><span>Selo</span><input value={productForm.badge} onChange={(event) => updateProductField("badge", event.target.value)} placeholder="-30% OFF" disabled={!canManage} /></label>
+                            <label className="field field-full"><span>Imagem por URL ou data URL</span><input value={productForm.image} onChange={(event) => updateProductField("image", event.target.value)} placeholder="/assets/product_1.jpg" required disabled={!canManage} /></label>
+                            <label className="field"><span>Upload de imagem</span><input type="file" accept="image/*" onChange={handleImageUpload} disabled={!canManage} /></label>
+                            <div className="field admin-image-preview">
+                                <span>Preview</span>
+                                <img src={imagePreview} alt="Preview da imagem do produto" />
+                            </div>
+                            <div className="field field-full">
+                                <span>Formas de pagamento</span>
+                                <div className="admin-payment-options">
+                                    {PAYMENT_METHOD_OPTIONS.map((method) => (
+                                        <label key={method} className="admin-check-chip">
+                                            <input
+                                                type="checkbox"
+                                                checked={productForm.paymentMethods.includes(method)}
+                                                onChange={() => togglePaymentMethod(method)}
+                                                disabled={!canManage}
+                                            />
+                                            <span>{method}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            <label className="field admin-checkbox-field"><span>Produto em destaque</span><input type="checkbox" checked={productForm.featured} onChange={(event) => updateProductField("featured", event.target.checked)} disabled={!canManage} /></label>
+                            <label className="field admin-checkbox-field"><span>Recebimento com Mercado Pago</span><input type="checkbox" checked={productForm.mercadoPagoEnabled} onChange={(event) => updateProductField("mercadoPagoEnabled", event.target.checked)} disabled={!canManage} /></label>
+                            <label className="field field-full"><span>Link do Mercado Pago</span><input value={productForm.mercadoPagoLink} onChange={(event) => updateProductField("mercadoPagoLink", event.target.value)} placeholder="https://www.mercadopago.com.br/..." disabled={!canManage || !productForm.mercadoPagoEnabled} /></label>
+                            <div className="form-actions field-full">
+                                <button type="submit" className="primary-button" disabled={isSaving || !canManage}>{isSaving ? "Salvando..." : productForm.id ? "Atualizar produto" : "Criar produto"}</button>
+                                <button type="button" className="secondary-button" onClick={closeProductModal}>Cancelar</button>
+                            </div>
+                        </form>
                     </section>
                 </div>
             ) : null}

@@ -1,6 +1,5 @@
 import { Montserrat } from "next/font/google";
-import { Footer } from "../components/footer";
-import { Header } from "../components/header";
+import { SiteChrome } from "../components/site-chrome";
 import { store } from "../data/store";
 import "./globals.css";
 
@@ -15,20 +14,12 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+    const whatsappHref = `https://wa.me/${store.whatsapp}?text=Olá, quero atendimento da DeVille Fashion.`;
+
     return (
         <html lang="pt-BR">
             <body className={montserrat.className}>
-                <Header />
-                {children}
-                <Footer />
-                <a
-                    href={`https://wa.me/${store.whatsapp}?text=Olá, quero atendimento da DeVille Fashion.`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="whatsapp-float"
-                >
-                    WhatsApp
-                </a>
+                <SiteChrome whatsappHref={whatsappHref}>{children}</SiteChrome>
             </body>
         </html>
     );
