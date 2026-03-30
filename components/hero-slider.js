@@ -37,7 +37,7 @@ export function HeroSlider() {
                                 Ver produtos
                             </Link>
                             <a
-                                href={`https://wa.me/${store.whatsapp}?text=Olá, quero atendimento para escolher um look da DeVille Fashion.`}
+                                href={`https://wa.me/${store.whatsapp}?text=Olá, quero atendimento com consultor da DeVille Fashion.`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="secondary-button"

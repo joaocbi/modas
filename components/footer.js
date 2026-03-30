@@ -48,7 +48,7 @@ export function Footer() {
                         </span>
                         <span>
                             <Truck size={16} />
-                            Entrega e retirada
+                            Entrega
                         </span>
                     </div>
                 </div>

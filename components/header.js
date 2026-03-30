@@ -41,7 +41,10 @@ export function Header() {
 
                 <Link href="/" className="brand">
                     <span className="brand-mark">D</span>
-                    <span className="brand-name">DeVille Fashion</span>
+                    <span className="brand-copy">
+                        <span className="brand-name">DeVille Fashion</span>
+                        <span className="brand-subtitle">MODAS E ACESSORIOS</span>
+                    </span>
                 </Link>
 
                 <div className="header-actions">
