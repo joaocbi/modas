@@ -35,6 +35,7 @@ async function main() {
                     subcategory: product.subcategory,
                     sizes: product.sizes,
                     colors: product.colors,
+                    images: product.images || [product.image],
                     paymentMethods: product.paymentMethods,
                     price: product.price,
                     oldPrice: product.oldPrice,

@@ -3,6 +3,21 @@
 import { useEffect, useMemo, useState } from "react";
 
 const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débito", "Boleto", "Mercado Pago"];
+const DEFAULT_PRODUCT_IMAGE = "/assets/product_1.jpg";
+const MAX_PRODUCT_IMAGES = 10;
+
+function normalizeClientImages(images) {
+    return [...new Set((images || []).map((item) => String(item || "").trim()).filter(Boolean))].slice(0, MAX_PRODUCT_IMAGES);
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Failed to read image file."));
+        reader.readAsDataURL(file);
+    });
+}
 
 function calculateTotalCost(price, costPrice, salesFeePercentage) {
     return Number((Number(costPrice || 0) + Number(price || 0) * (Number(salesFeePercentage || 0) / 100)).toFixed(2));
@@ -26,7 +41,8 @@ function getEmptyProductForm() {
         mercadoPagoEnabled: false,
         mercadoPagoLink: "",
         badge: "",
-        image: "/assets/product_1.jpg",
+        image: DEFAULT_PRODUCT_IMAGE,
+        images: [DEFAULT_PRODUCT_IMAGE],
         featured: true,
     };
 }
@@ -219,7 +235,7 @@ export function AdminDashboard({
 
     function resetProductForm() {
         setProductForm(getEmptyProductForm());
-        setImagePreview("/assets/product_1.jpg");
+        setImagePreview(DEFAULT_PRODUCT_IMAGE);
     }
 
     function openNewProductModal() {
@@ -253,8 +269,36 @@ export function AdminDashboard({
         });
 
         if (name === "image") {
-            setImagePreview(String(value || "") || "/assets/product_1.jpg");
+            setImagePreview(String(value || "") || DEFAULT_PRODUCT_IMAGE);
         }
+    }
+
+    function applyProductImages(nextImages, preferredPreviewImage) {
+        const normalizedImages = normalizeClientImages(nextImages);
+        const fallbackImage = normalizedImages[0] || DEFAULT_PRODUCT_IMAGE;
+        const nextPreviewImage = preferredPreviewImage && normalizedImages.includes(preferredPreviewImage) ? preferredPreviewImage : fallbackImage;
+
+        setProductForm((current) => ({
+            ...current,
+            image: fallbackImage,
+            images: normalizedImages,
+        }));
+        setImagePreview(nextPreviewImage);
+    }
+
+    function updateProductImagesFromText(value) {
+        const nextImages = value
+            .split("\n")
+            .map((item) => item.trim())
+            .filter(Boolean);
+
+        applyProductImages(nextImages, imagePreview);
+    }
+
+    function removeProductImage(imageToRemove) {
+        const nextImages = (productForm.images || []).filter((image) => image !== imageToRemove);
+        applyProductImages(nextImages, imagePreview === imageToRemove ? nextImages[0] : imagePreview);
+        showStatus("success", "Imagem removida do produto.");
     }
 
     function togglePaymentMethod(method) {
@@ -286,6 +330,8 @@ export function AdminDashboard({
     }
 
     function startEditingProduct(product) {
+        const normalizedImages = normalizeClientImages(product.images?.length ? product.images : [product.image]);
+
         setActiveTab("products");
         setProductForm({
             id: String(product.id),
@@ -304,10 +350,11 @@ export function AdminDashboard({
             mercadoPagoEnabled: Boolean(product.mercadoPagoEnabled),
             mercadoPagoLink: product.mercadoPagoLink || "",
             badge: product.badge,
-            image: product.image,
+            image: normalizedImages[0] || DEFAULT_PRODUCT_IMAGE,
+            images: normalizedImages,
             featured: Boolean(product.featured),
         });
-        setImagePreview(product.image || "/assets/product_1.jpg");
+        setImagePreview(normalizedImages[0] || DEFAULT_PRODUCT_IMAGE);
         setIsProductModalOpen(true);
         showStatus("success", `Editando produto ${product.name}.`);
     }
@@ -340,21 +387,44 @@ export function AdminDashboard({
     }
 
     async function handleImageUpload(event) {
-        const file = event.target.files?.[0];
-        if (!file) {
+        const files = Array.from(event.target.files || []);
+        if (!files.length) {
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = () => {
-            const imageSource = String(reader.result || "");
-            updateProductField("image", imageSource);
-            showStatus("success", "Imagem carregada com sucesso para este produto.");
-        };
-        reader.onerror = () => {
+        const currentImages = productForm.images || [];
+        const remainingSlots = MAX_PRODUCT_IMAGES - currentImages.length;
+
+        if (remainingSlots <= 0) {
+            showStatus("warning", `Limite de ${MAX_PRODUCT_IMAGES} imagens por produto atingido.`);
+            event.target.value = "";
+            return;
+        }
+
+        const filesToLoad = files.slice(0, remainingSlots);
+
+        try {
+            const uploadedImages = await Promise.all(filesToLoad.map(readFileAsDataUrl));
+            const nextImages = [...currentImages, ...uploadedImages];
+
+            console.log("[AdminDashboard] Product images uploaded.", {
+                selectedFiles: files.length,
+                uploadedFiles: uploadedImages.length,
+            });
+
+            applyProductImages(nextImages, uploadedImages[0] || imagePreview);
+            showStatus(
+                "success",
+                files.length > filesToLoad.length
+                    ? `Foram carregadas ${uploadedImages.length} imagens. O limite por produto é ${MAX_PRODUCT_IMAGES}.`
+                    : `${uploadedImages.length} imagem(ns) carregada(s) com sucesso para este produto.`
+            );
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to upload product images.", error);
             showStatus("warning", "Nao foi possivel carregar a imagem selecionada.");
-        };
-        reader.readAsDataURL(file);
+        } finally {
+            event.target.value = "";
+        }
     }
 
     async function handleProductSubmit(event) {
@@ -373,6 +443,7 @@ export function AdminDashboard({
                 totalCost: Number(productForm.totalCost || 0),
                 featured: Boolean(productForm.featured),
                 mercadoPagoEnabled: Boolean(productForm.mercadoPagoEnabled),
+                images: normalizeClientImages(productForm.images),
             };
             const { response, data } = await sendAdminRequest("/api/admin/products", isEditing ? "PATCH" : "POST", payload);
             console.log("[AdminDashboard] Product response.", data);
@@ -646,6 +717,7 @@ export function AdminDashboard({
                                             {formatCurrency(Number(product.price || 0) - Number(product.totalCost || 0))}
                                         </span>
                                         <span>Pagamentos: {(product.paymentMethods || []).join(" • ") || "Não informado"}</span>
+                                        <span>{(product.images || [product.image]).length} imagem(ns) cadastrada(s)</span>
                                         {product.mercadoPagoEnabled ? (
                                             <span>Mercado Pago ativo{product.mercadoPagoLink ? " com link configurado" : ""}</span>
                                         ) : null}
@@ -811,11 +883,42 @@ export function AdminDashboard({
                             <label className="field"><span>Porcentagem sobre vendas</span><input type="number" step="0.01" value={productForm.salesFeePercentage} onChange={(event) => updateProductField("salesFeePercentage", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Custo total</span><input type="number" step="0.01" value={productForm.totalCost} readOnly disabled /></label>
                             <label className="field"><span>Selo</span><input value={productForm.badge} onChange={(event) => updateProductField("badge", event.target.value)} placeholder="-30% OFF" disabled={!canManage} /></label>
-                            <label className="field field-full"><span>Imagem por URL ou data URL</span><input value={productForm.image} onChange={(event) => updateProductField("image", event.target.value)} placeholder="/assets/product_1.jpg" required disabled={!canManage} /></label>
-                            <label className="field"><span>Upload de imagem</span><input type="file" accept="image/*" onChange={handleImageUpload} disabled={!canManage} /></label>
-                            <div className="field admin-image-preview">
-                                <span>Preview</span>
-                                <img src={imagePreview} alt="Preview da imagem do produto" />
+                            <label className="field field-full">
+                                <span>Imagens por URL ou data URL</span>
+                                <textarea
+                                    value={(productForm.images || []).join("\n")}
+                                    onChange={(event) => updateProductImagesFromText(event.target.value)}
+                                    placeholder={"/assets/product_1.jpg\n/assets/product_2.jpg"}
+                                    rows={5}
+                                    disabled={!canManage}
+                                />
+                                <small className="field-help">Uma imagem por linha. Máximo de {MAX_PRODUCT_IMAGES} imagens por produto.</small>
+                            </label>
+                            <label className="field field-full">
+                                <span>Upload de imagens em alta resolução</span>
+                                <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={!canManage} />
+                                <small className="field-help">Selecione até {MAX_PRODUCT_IMAGES} imagens. A primeira vira a capa principal do produto.</small>
+                            </label>
+                            <div className="field field-full admin-image-gallery-editor">
+                                <span>Galeria do produto</span>
+                                <div className="admin-image-preview">
+                                    <img src={imagePreview} alt="Preview da imagem principal do produto" />
+                                </div>
+                                <div className="admin-image-preview-grid">
+                                    {(productForm.images || []).map((image, index) => (
+                                        <article key={`${image}-${index}`} className={`admin-image-thumb-card ${imagePreview === image ? "is-active" : ""}`}>
+                                            <button type="button" className="admin-image-thumb-button" onClick={() => setImagePreview(image)}>
+                                                <img src={image} alt={`Imagem ${index + 1} do produto`} />
+                                            </button>
+                                            <div className="admin-image-thumb-footer">
+                                                <span>{index === 0 ? "Capa" : `Imagem ${index + 1}`}</span>
+                                                <button type="button" className="text-button admin-delete-button" onClick={() => removeProductImage(image)} disabled={!canManage}>
+                                                    Remover
+                                                </button>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
                             </div>
                             <div className="field field-full">
                                 <span>Formas de pagamento</span>

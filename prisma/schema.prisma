@@ -14,6 +14,7 @@ model Product {
   subcategory        String   @default("")
   sizes              String[]
   colors             String[]
+  images             String[] @default([])
   price              Decimal  @db.Decimal(10, 2)
   oldPrice           Decimal  @db.Decimal(10, 2)
   costPrice          Decimal  @db.Decimal(10, 2) @default(0)
