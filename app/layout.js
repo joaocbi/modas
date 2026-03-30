@@ -1,4 +1,4 @@
-import { Montserrat } from "next/font/google";
+import { Montserrat, Playfair_Display } from "next/font/google";
 import { SiteChrome } from "../components/site-chrome";
 import { store } from "../data/store";
 import "./globals.css";
@@ -6,6 +6,12 @@ import "./globals.css";
 const montserrat = Montserrat({
     subsets: ["latin"],
     weight: ["400", "500", "600", "700"],
+});
+
+const playfairDisplay = Playfair_Display({
+    subsets: ["latin"],
+    weight: ["600", "700"],
+    variable: "--font-brand",
 });
 
 export const metadata = {
@@ -18,7 +24,7 @@ export default function RootLayout({ children }) {
 
     return (
         <html lang="pt-BR">
-            <body className={montserrat.className}>
+            <body className={`${montserrat.className} ${playfairDisplay.variable}`}>
                 <SiteChrome whatsappHref={whatsappHref}>{children}</SiteChrome>
             </body>
         </html>

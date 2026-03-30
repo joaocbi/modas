@@ -85,40 +85,45 @@ img {
 .brand {
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     font-weight: 700;
     letter-spacing: 0.06em;
 }
 
 .brand-copy {
     display: inline-grid;
-    gap: 2px;
+    gap: 3px;
 }
 
 .brand-mark {
     display: grid;
     place-items: center;
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     background: linear-gradient(135deg, #f2df8e, #996515);
     color: #ffffff;
-    box-shadow: var(--shadow-soft);
+    box-shadow: 0 16px 32px rgba(153, 101, 21, 0.22);
 }
 
 .brand-name {
-    font-size: 1.05rem;
+    font-family: var(--font-brand), Georgia, serif;
+    font-size: 1.18rem;
     line-height: 1;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--color-primary);
 }
 
 .brand-subtitle {
     display: inline-block;
     width: fit-content;
     max-width: 100%;
-    font-size: 0.55rem;
+    font-size: 0.58rem;
     line-height: 1;
-    letter-spacing: 0.26em;
+    letter-spacing: 0.3em;
     color: var(--color-text-muted);
+    text-transform: uppercase;
 }
 
 .header-actions {
@@ -170,22 +175,33 @@ img {
 
 .main-nav {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     padding: 0 0 18px;
     overflow-x: auto;
 }
 
 .nav-link {
-    padding: 10px 16px;
+    font-family: var(--font-brand), Georgia, serif;
+    font-size: 1.06rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 11px 18px;
     border-radius: 999px;
     color: var(--color-text-muted);
     white-space: nowrap;
-    transition: background var(--transition), color var(--transition);
+    transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.nav-link:hover {
+    color: var(--color-primary);
+    background: rgba(138, 133, 102, 0.1);
+    box-shadow: 0 10px 24px rgba(21, 21, 21, 0.05);
 }
 
 .nav-link.is-active {
-    background: var(--color-primary);
+    background: linear-gradient(135deg, #1f1f1f, #3a372d);
     color: #ffffff;
+    box-shadow: 0 12px 28px rgba(21, 21, 21, 0.16);
 }
 
 .mobile-only {
@@ -640,11 +656,12 @@ img {
     max-height: min(80vh, 920px);
     object-fit: contain;
     display: block;
-    transition: transform 180ms ease;
+    will-change: transform;
+    transition: transform 240ms ease-out;
 }
 
 .product-lightbox-image-wrap:hover .product-lightbox-image {
-    transform: scale(1.9);
+    transform: scale(2.5);
 }
 
 .product-prices {
