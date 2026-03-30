@@ -1,5 +1,6 @@
 ﻿"use client";
 
+import { ChevronLeft, ChevronRight, CreditCard, FolderKanban, ImagePlus, Package2, Search, Sparkles, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débito", "Boleto", "Mercado Pago"];
@@ -19,8 +20,92 @@ function readFileAsDataUrl(file) {
     });
 }
 
-function calculateTotalCost(price, costPrice, salesFeePercentage) {
-    return Number((Number(costPrice || 0) + Number(price || 0) * (Number(salesFeePercentage || 0) / 100)).toFixed(2));
+function parseDecimalValue(value) {
+    const normalizedValue = String(value || "").trim();
+
+    if (!normalizedValue) {
+        return 0;
+    }
+
+    if (normalizedValue.includes(",")) {
+        return Number(normalizedValue.replace(/\./g, "").replace(",", "."));
+    }
+
+    return Number(normalizedValue);
+}
+
+function sanitizeDecimalInput(value) {
+    const normalizedValue = String(value || "").replace(/[^\d.,]/g, "");
+
+    if (!normalizedValue) {
+        return "";
+    }
+
+    if (normalizedValue.includes(",")) {
+        const withoutDots = normalizedValue.replace(/\./g, "");
+        const [integerPart, ...decimalParts] = withoutDots.split(",");
+        return decimalParts.length ? `${integerPart},${decimalParts.join("").slice(0, 2)}` : integerPart;
+    }
+
+    const [integerPart, ...decimalParts] = normalizedValue.split(".");
+    return decimalParts.length ? `${integerPart}.${decimalParts.join("").slice(0, 2)}` : integerPart;
+}
+
+function formatDecimalInput(value) {
+    if (value === "" || value === null || value === undefined) {
+        return "";
+    }
+
+    return parseDecimalValue(value).toFixed(2).replace(".", ",");
+}
+
+function calculateSalePrice(costPrice, salesFeePercentage) {
+    const normalizedCostPrice = parseDecimalValue(costPrice);
+    const normalizedSalesFeePercentage = parseDecimalValue(salesFeePercentage);
+
+    return Number((normalizedCostPrice * (1 + normalizedSalesFeePercentage / 100)).toFixed(2));
+}
+
+function calculateTotalCost(costPrice) {
+    return Number(parseDecimalValue(costPrice).toFixed(2));
+}
+
+function calculateEstimatedProfit(price, totalCost) {
+    return Number((parseDecimalValue(price) - parseDecimalValue(totalCost)).toFixed(2));
+}
+
+function calculateMarginPercentage(price, totalCost) {
+    const normalizedPrice = parseDecimalValue(price);
+    const normalizedProfit = calculateEstimatedProfit(price, totalCost);
+
+    if (normalizedPrice <= 0) {
+        return 0;
+    }
+
+    return Number(((normalizedProfit / normalizedPrice) * 100).toFixed(2));
+}
+
+function getMarginTone(marginPercentage) {
+    if (marginPercentage <= 10) {
+        return "danger";
+    }
+
+    if (marginPercentage <= 20) {
+        return "warning";
+    }
+
+    return "success";
+}
+
+function recalculateProductPricing(productForm) {
+    const nextPrice = calculateSalePrice(productForm.costPrice, productForm.salesFeePercentage);
+    const nextTotalCost = calculateTotalCost(productForm.costPrice);
+
+    return {
+        ...productForm,
+        price: formatDecimalInput(nextPrice),
+        totalCost: formatDecimalInput(nextTotalCost),
+    };
 }
 
 function getEmptyProductForm() {
@@ -74,11 +159,11 @@ function formatCurrency(value) {
     return new Intl.NumberFormat("pt-BR", {
         style: "currency",
         currency: "BRL",
-    }).format(Number(value || 0));
+    }).format(parseDecimalValue(value));
 }
 
 function formatPercent(value) {
-    return `${Number(value || 0).toFixed(2).replace(".", ",")}%`;
+    return `${parseDecimalValue(value).toFixed(2).replace(".", ",")}%`;
 }
 
 async function sendAdminRequest(url, method, payload) {
@@ -92,6 +177,20 @@ async function sendAdminRequest(url, method, payload) {
 
     const data = await response.json();
     return { response, data };
+}
+
+async function loadAdminProducts() {
+    const response = await fetch("/api/admin/products", {
+        method: "GET",
+        cache: "no-store",
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || "Nao foi possivel recarregar os produtos.");
+    }
+
+    return data.products || [];
 }
 
 function MetricCard({ label, value, help }) {
@@ -127,6 +226,22 @@ function ChartCard({ title, items }) {
     );
 }
 
+function AdminFormSection({ icon: Icon, title, description }) {
+    return (
+        <div className="field-full admin-form-section-title">
+            <div className="admin-form-section-heading">
+                <span className="admin-form-section-icon">
+                    <Icon size={18} />
+                </span>
+                <div>
+                    <strong>{title}</strong>
+                    <p>{description}</p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function AdminDashboard({
     initialProducts,
     initialOrders,
@@ -150,6 +265,13 @@ export function AdminDashboard({
     const [isSaving, setIsSaving] = useState(false);
     const [imagePreview, setImagePreview] = useState("/assets/product_1.jpg");
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+    const [zoomedImage, setZoomedImage] = useState("");
+    const estimatedProfit = useMemo(() => calculateEstimatedProfit(productForm.price, productForm.totalCost), [productForm.price, productForm.totalCost]);
+    const estimatedMarginPercentage = useMemo(
+        () => calculateMarginPercentage(productForm.price, productForm.totalCost),
+        [productForm.price, productForm.totalCost]
+    );
+    const marginTone = useMemo(() => getMarginTone(estimatedMarginPercentage), [estimatedMarginPercentage]);
 
     const totalFeatured = useMemo(() => products.filter((product) => product.featured).length, [products]);
     const totalRevenue = useMemo(() => orders.reduce((sum, order) => sum + Number(order.total || 0), 0), [orders]);
@@ -246,7 +368,16 @@ export function AdminDashboard({
 
     function closeProductModal() {
         setIsProductModalOpen(false);
+        setZoomedImage("");
         resetProductForm();
+    }
+
+    function openImageLightbox(image) {
+        setZoomedImage(String(image || imagePreview || DEFAULT_PRODUCT_IMAGE));
+    }
+
+    function closeImageLightbox() {
+        setZoomedImage("");
     }
 
     function resetOrderForm() {
@@ -258,13 +389,15 @@ export function AdminDashboard({
     }
 
     function updateProductField(name, value) {
+        const normalizedValue = ["oldPrice", "costPrice", "salesFeePercentage"].includes(name) ? sanitizeDecimalInput(value) : value;
+
         setProductForm((current) => {
-            const nextProductForm = { ...current, [name]: value };
-            if (["price", "costPrice", "salesFeePercentage"].includes(name)) {
-                nextProductForm.totalCost = String(
-                    calculateTotalCost(nextProductForm.price, nextProductForm.costPrice, nextProductForm.salesFeePercentage)
-                );
+            let nextProductForm = { ...current, [name]: normalizedValue };
+
+            if (["costPrice", "salesFeePercentage"].includes(name)) {
+                nextProductForm = recalculateProductPricing(nextProductForm);
             }
+
             return nextProductForm;
         });
 
@@ -273,8 +406,20 @@ export function AdminDashboard({
         }
     }
 
-    function applyProductImages(nextImages, preferredPreviewImage) {
+    function applyProductImages(nextImages, preferredPreviewImage, options = {}) {
         const normalizedImages = normalizeClientImages(nextImages);
+        const allowEmpty = Boolean(options.allowEmpty);
+
+        if (!normalizedImages.length && allowEmpty) {
+            setProductForm((current) => ({
+                ...current,
+                image: "",
+                images: [],
+            }));
+            setImagePreview(DEFAULT_PRODUCT_IMAGE);
+            return;
+        }
+
         const fallbackImage = normalizedImages[0] || DEFAULT_PRODUCT_IMAGE;
         const nextPreviewImage = preferredPreviewImage && normalizedImages.includes(preferredPreviewImage) ? preferredPreviewImage : fallbackImage;
 
@@ -297,8 +442,58 @@ export function AdminDashboard({
 
     function removeProductImage(imageToRemove) {
         const nextImages = (productForm.images || []).filter((image) => image !== imageToRemove);
-        applyProductImages(nextImages, imagePreview === imageToRemove ? nextImages[0] : imagePreview);
+        applyProductImages(nextImages, imagePreview === imageToRemove ? nextImages[0] : imagePreview, { allowEmpty: true });
         showStatus("success", "Imagem removida do produto.");
+    }
+
+    function focusAdjacentPreviewImage(direction) {
+        const currentImages = productForm.images || [];
+
+        if (currentImages.length <= 1) {
+            return;
+        }
+
+        const currentIndex = currentImages.findIndex((image) => image === imagePreview);
+        const safeIndex = currentIndex >= 0 ? currentIndex : 0;
+        const nextIndex =
+            direction === "left"
+                ? (safeIndex - 1 + currentImages.length) % currentImages.length
+                : (safeIndex + 1) % currentImages.length;
+
+        setImagePreview(currentImages[nextIndex]);
+    }
+
+    function moveProductImage(imageToMove, direction) {
+        const currentImages = [...(productForm.images || [])];
+        const currentIndex = currentImages.findIndex((image) => image === imageToMove);
+
+        if (currentIndex < 0) {
+            return;
+        }
+
+        const targetIndex = direction === "left" ? currentIndex - 1 : currentIndex + 1;
+
+        if (targetIndex < 0 || targetIndex >= currentImages.length) {
+            return;
+        }
+
+        [currentImages[currentIndex], currentImages[targetIndex]] = [currentImages[targetIndex], currentImages[currentIndex]];
+        applyProductImages(currentImages, imagePreview === imageToMove ? currentImages[targetIndex] : imagePreview);
+        showStatus("success", "Ordem das imagens atualizada.");
+    }
+
+    function setProductCoverImage(imageToPromote) {
+        const currentImages = [...(productForm.images || [])];
+        const currentIndex = currentImages.findIndex((image) => image === imageToPromote);
+
+        if (currentIndex <= 0) {
+            setImagePreview(imageToPromote || DEFAULT_PRODUCT_IMAGE);
+            return;
+        }
+
+        const nextImages = [currentImages[currentIndex], ...currentImages.filter((image) => image !== imageToPromote)];
+        applyProductImages(nextImages, imageToPromote);
+        showStatus("success", "Imagem definida como capa do produto.");
     }
 
     function togglePaymentMethod(method) {
@@ -331,6 +526,10 @@ export function AdminDashboard({
 
     function startEditingProduct(product) {
         const normalizedImages = normalizeClientImages(product.images?.length ? product.images : [product.image]);
+        const pricingForm = recalculateProductPricing({
+            costPrice: String(product.costPrice || 0),
+            salesFeePercentage: String(product.salesFeePercentage || 0),
+        });
 
         setActiveTab("products");
         setProductForm({
@@ -342,11 +541,11 @@ export function AdminDashboard({
             sizes: product.sizes.join(", "),
             colors: product.colors.join(", "),
             paymentMethods: product.paymentMethods || [],
-            price: String(product.price),
-            oldPrice: String(product.oldPrice),
-            costPrice: String(product.costPrice || 0),
-            salesFeePercentage: String(product.salesFeePercentage || 0),
-            totalCost: String(product.totalCost || 0),
+            price: pricingForm.price,
+            oldPrice: formatDecimalInput(product.oldPrice),
+            costPrice: formatDecimalInput(product.costPrice || 0),
+            salesFeePercentage: formatDecimalInput(product.salesFeePercentage || 0),
+            totalCost: pricingForm.totalCost,
             mercadoPagoEnabled: Boolean(product.mercadoPagoEnabled),
             mercadoPagoLink: product.mercadoPagoLink || "",
             badge: product.badge,
@@ -434,13 +633,14 @@ export function AdminDashboard({
 
         try {
             const isEditing = Boolean(productForm.id);
+            const normalizedPricingForm = recalculateProductPricing(productForm);
             const payload = {
-                ...productForm,
-                price: Number(productForm.price || 0),
-                oldPrice: Number(productForm.oldPrice || 0),
-                costPrice: Number(productForm.costPrice || 0),
-                salesFeePercentage: Number(productForm.salesFeePercentage || 0),
-                totalCost: Number(productForm.totalCost || 0),
+                ...normalizedPricingForm,
+                price: parseDecimalValue(normalizedPricingForm.price || 0),
+                oldPrice: parseDecimalValue(productForm.oldPrice || 0),
+                costPrice: parseDecimalValue(productForm.costPrice || 0),
+                salesFeePercentage: parseDecimalValue(productForm.salesFeePercentage || 0),
+                totalCost: parseDecimalValue(normalizedPricingForm.totalCost || 0),
                 featured: Boolean(productForm.featured),
                 mercadoPagoEnabled: Boolean(productForm.mercadoPagoEnabled),
                 images: normalizeClientImages(productForm.images),
@@ -453,13 +653,28 @@ export function AdminDashboard({
                 return;
             }
 
-            setProducts((currentProducts) =>
-                isEditing
-                    ? currentProducts.map((product) => (Number(product.id) === Number(data.product.id) ? data.product : product))
-                    : [...currentProducts, data.product]
-            );
+            try {
+                const latestProducts = await loadAdminProducts();
+                setProducts(latestProducts);
+                console.log("[AdminDashboard] Product list refreshed after save.", {
+                    count: latestProducts.length,
+                });
+            } catch (refreshError) {
+                console.log("[AdminDashboard] Failed to refresh product list after save.", refreshError);
+                setProducts((currentProducts) =>
+                    isEditing
+                        ? currentProducts.map((product) => (Number(product.id) === Number(data.product.id) ? data.product : product))
+                        : [...currentProducts, data.product]
+                );
+            }
+
             closeProductModal();
-            showStatus("success", isEditing ? "Produto atualizado com sucesso." : "Produto criado com sucesso.");
+            showStatus(
+                "success",
+                isEditing
+                    ? `Produto atualizado com sucesso. Preco de venda salvo: ${formatCurrency(data.product.price)}.`
+                    : `Produto criado com sucesso. Preco de venda salvo: ${formatCurrency(data.product.price)}.`
+            );
         } catch (error) {
             console.log("[AdminDashboard] Failed to save product.", error);
             showStatus("warning", "Ocorreu um erro ao salvar o produto.");
@@ -469,7 +684,7 @@ export function AdminDashboard({
     }
 
     useEffect(() => {
-        if (!isProductModalOpen) {
+        if (!isProductModalOpen && !zoomedImage) {
             return undefined;
         }
 
@@ -479,7 +694,7 @@ export function AdminDashboard({
         return () => {
             document.body.style.overflow = previousOverflow;
         };
-    }, [isProductModalOpen]);
+    }, [isProductModalOpen, zoomedImage]);
 
     async function handleOrderSubmit(event) {
         event.preventDefault();
@@ -863,26 +1078,84 @@ export function AdminDashboard({
                         <div className="admin-modal-header">
                             <div>
                                 <p className="section-kicker">Manutenção de produto</p>
-                                <h2>{productForm.id ? "Editar produto" : "Cadastrar produto"}</h2>
+                                <h2 className="admin-modal-title">
+                                    <Sparkles size={22} />
+                                    <span>{productForm.id ? "Editar produto" : "Cadastrar produto"}</span>
+                                </h2>
+                                <p className="admin-modal-description">
+                                    Organize dados comerciais, galeria, preços e formas de pagamento em um só lugar.
+                                </p>
+                                <div className="admin-modal-meta">
+                                    <span>{(productForm.images || []).length} imagem(ns)</span>
+                                    <span>Venda {formatCurrency(productForm.price || 0)}</span>
+                                    <span>Custo total {formatCurrency(productForm.totalCost || 0)}</span>
+                                    <span>Lucro {formatCurrency(estimatedProfit)}</span>
+                                </div>
                             </div>
                             <button type="button" className="secondary-button" onClick={closeProductModal}>
                                 Fechar
                             </button>
                         </div>
 
-                        <form className="form-grid" onSubmit={handleProductSubmit}>
+                        <form className="form-grid admin-modal-form" onSubmit={handleProductSubmit}>
+                            <AdminFormSection
+                                icon={Package2}
+                                title="Informações principais"
+                                description="Defina nome, categoria, descrição e os atributos visíveis no catálogo."
+                            />
                             <label className="field"><span>Nome</span><input value={productForm.name} onChange={(event) => updateProductField("name", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Categoria</span><input value={productForm.category} onChange={(event) => updateProductField("category", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Subcategoria</span><input value={productForm.subcategory} onChange={(event) => updateProductField("subcategory", event.target.value)} required disabled={!canManage} /></label>
                             <label className="field"><span>Tamanhos</span><input value={productForm.sizes} onChange={(event) => updateProductField("sizes", event.target.value)} placeholder="P, M, G" required disabled={!canManage} /></label>
                             <label className="field"><span>Cores</span><input value={productForm.colors} onChange={(event) => updateProductField("colors", event.target.value)} placeholder="Preto, Areia" required disabled={!canManage} /></label>
                             <label className="field field-full"><span>Descrição</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>
-                            <label className="field"><span>Preço de venda</span><input type="number" step="0.01" value={productForm.price} onChange={(event) => updateProductField("price", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Preço antigo</span><input type="number" step="0.01" value={productForm.oldPrice} onChange={(event) => updateProductField("oldPrice", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Custo do produto</span><input type="number" step="0.01" value={productForm.costPrice} onChange={(event) => updateProductField("costPrice", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Porcentagem sobre vendas</span><input type="number" step="0.01" value={productForm.salesFeePercentage} onChange={(event) => updateProductField("salesFeePercentage", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Custo total</span><input type="number" step="0.01" value={productForm.totalCost} readOnly disabled /></label>
+                            <AdminFormSection
+                                icon={FolderKanban}
+                                title="Precificação"
+                                description="Controle o valor de venda, referência antiga, custo e taxa aplicada."
+                            />
+                            <label className="field">
+                                <span>Preço de venda</span>
+                                <input type="text" inputMode="decimal" value={productForm.price} readOnly disabled={!canManage} />
+                                <small className="field-help">Calculado automaticamente com base no custo do produto e na porcentagem sobre vendas.</small>
+                                <small className="field-help field-formula">
+                                    Formula: {formatCurrency(productForm.costPrice)} x (1 + {formatPercent(productForm.salesFeePercentage)}) = {formatCurrency(productForm.price)}
+                                </small>
+                            </label>
+                            <label className="field"><span>Preço antigo</span><input type="text" inputMode="decimal" value={productForm.oldPrice} onChange={(event) => updateProductField("oldPrice", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Custo do produto</span><input type="text" inputMode="decimal" value={productForm.costPrice} onChange={(event) => updateProductField("costPrice", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field"><span>Porcentagem sobre vendas</span><input type="text" inputMode="decimal" value={productForm.salesFeePercentage} onChange={(event) => updateProductField("salesFeePercentage", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field">
+                                <span>Custo total</span>
+                                <input type="text" inputMode="decimal" value={productForm.totalCost} readOnly disabled />
+                                <small className="field-help">Representa o custo base do produto para comparação com o valor final de venda.</small>
+                            </label>
                             <label className="field"><span>Selo</span><input value={productForm.badge} onChange={(event) => updateProductField("badge", event.target.value)} placeholder="-30% OFF" disabled={!canManage} /></label>
+                            <div className="field field-full admin-profit-summary">
+                                <span>Resumo de margem</span>
+                                <div className="admin-profit-grid">
+                                    <article className="admin-profit-card">
+                                        <strong>Lucro estimado</strong>
+                                        <p>{formatCurrency(estimatedProfit)}</p>
+                                    </article>
+                                    <article className={`admin-profit-card is-${marginTone}`}>
+                                        <strong>Margem estimada</strong>
+                                        <p>{formatPercent(estimatedMarginPercentage)}</p>
+                                        <small>
+                                            {marginTone === "danger"
+                                                ? "Margem muito baixa. Revise custo ou porcentagem."
+                                                : marginTone === "warning"
+                                                  ? "Margem apertada. Vale revisar a precificação."
+                                                  : "Margem saudavel para este produto."}
+                                        </small>
+                                    </article>
+                                </div>
+                            </div>
+                            <AdminFormSection
+                                icon={ImagePlus}
+                                title="Galeria do produto"
+                                description="Escolha a capa e monte uma apresentação visual mais completa para o catálogo."
+                            />
                             <label className="field field-full">
                                 <span>Imagens por URL ou data URL</span>
                                 <textarea
@@ -902,7 +1175,50 @@ export function AdminDashboard({
                             <div className="field field-full admin-image-gallery-editor">
                                 <span>Galeria do produto</span>
                                 <div className="admin-image-preview">
-                                    <img src={imagePreview} alt="Preview da imagem principal do produto" />
+                                    <button
+                                        type="button"
+                                        className="admin-image-preview-button"
+                                        onClick={() => openImageLightbox(imagePreview)}
+                                        aria-label="Ampliar imagem principal do produto"
+                                    >
+                                        <img src={imagePreview} alt="Preview da imagem principal do produto" />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="secondary-button admin-image-zoom-trigger"
+                                        onClick={() => openImageLightbox(imagePreview)}
+                                    >
+                                        <Search size={16} />
+                                        <span>Ampliar imagem</span>
+                                    </button>
+                                    <div className="admin-image-preview-actions">
+                                        <button
+                                            type="button"
+                                            className="secondary-button admin-image-switch-button"
+                                            onClick={() => focusAdjacentPreviewImage("left")}
+                                            disabled={(productForm.images || []).length <= 1}
+                                        >
+                                            <ChevronLeft size={16} />
+                                            <span>Anterior</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="secondary-button admin-image-switch-button"
+                                            onClick={() => focusAdjacentPreviewImage("right")}
+                                            disabled={(productForm.images || []).length <= 1}
+                                        >
+                                            <span>Próxima</span>
+                                            <ChevronRight size={16} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="secondary-button admin-image-remove-current"
+                                            onClick={() => removeProductImage(imagePreview)}
+                                            disabled={!canManage || !(productForm.images || []).length}
+                                        >
+                                            Remover atual
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="admin-image-preview-grid">
                                     {(productForm.images || []).map((image, index) => (
@@ -912,14 +1228,47 @@ export function AdminDashboard({
                                             </button>
                                             <div className="admin-image-thumb-footer">
                                                 <span>{index === 0 ? "Capa" : `Imagem ${index + 1}`}</span>
-                                                <button type="button" className="text-button admin-delete-button" onClick={() => removeProductImage(image)} disabled={!canManage}>
-                                                    Remover
-                                                </button>
+                                                <div className="admin-image-thumb-actions">
+                                                    <button
+                                                        type="button"
+                                                        className="text-button admin-cover-button"
+                                                        onClick={() => setProductCoverImage(image)}
+                                                        disabled={!canManage || index === 0}
+                                                    >
+                                                        Definir como capa
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="text-button"
+                                                        onClick={() => moveProductImage(image, "left")}
+                                                        disabled={!canManage || index === 0}
+                                                        aria-label={`Mover imagem ${index + 1} para a esquerda`}
+                                                    >
+                                                        <ChevronLeft size={16} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="text-button"
+                                                        onClick={() => moveProductImage(image, "right")}
+                                                        disabled={!canManage || index === (productForm.images || []).length - 1}
+                                                        aria-label={`Mover imagem ${index + 1} para a direita`}
+                                                    >
+                                                        <ChevronRight size={16} />
+                                                    </button>
+                                                    <button type="button" className="text-button admin-delete-button" onClick={() => removeProductImage(image)} disabled={!canManage}>
+                                                        Remover
+                                                    </button>
+                                                </div>
                                             </div>
                                         </article>
                                     ))}
                                 </div>
                             </div>
+                            <AdminFormSection
+                                icon={CreditCard}
+                                title="Pagamento e destaque"
+                                description="Defina como o cliente pode pagar e se o produto deve receber mais visibilidade."
+                            />
                             <div className="field field-full">
                                 <span>Formas de pagamento</span>
                                 <div className="admin-payment-options">
@@ -939,11 +1288,28 @@ export function AdminDashboard({
                             <label className="field admin-checkbox-field"><span>Produto em destaque</span><input type="checkbox" checked={productForm.featured} onChange={(event) => updateProductField("featured", event.target.checked)} disabled={!canManage} /></label>
                             <label className="field admin-checkbox-field"><span>Recebimento com Mercado Pago</span><input type="checkbox" checked={productForm.mercadoPagoEnabled} onChange={(event) => updateProductField("mercadoPagoEnabled", event.target.checked)} disabled={!canManage} /></label>
                             <label className="field field-full"><span>Link do Mercado Pago</span><input value={productForm.mercadoPagoLink} onChange={(event) => updateProductField("mercadoPagoLink", event.target.value)} placeholder="https://www.mercadopago.com.br/..." disabled={!canManage || !productForm.mercadoPagoEnabled} /></label>
-                            <div className="form-actions field-full">
+                            <div className="form-actions field-full admin-modal-actions">
                                 <button type="submit" className="primary-button" disabled={isSaving || !canManage}>{isSaving ? "Salvando..." : productForm.id ? "Atualizar produto" : "Criar produto"}</button>
                                 <button type="button" className="secondary-button" onClick={closeProductModal}>Cancelar</button>
                             </div>
                         </form>
+                    </section>
+                </div>
+            ) : null}
+
+            {zoomedImage ? (
+                <div className="admin-lightbox-backdrop" role="presentation" onClick={closeImageLightbox}>
+                    <section
+                        className="admin-lightbox-card"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label="Imagem ampliada do produto"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <button type="button" className="admin-lightbox-close" onClick={closeImageLightbox} aria-label="Fechar imagem ampliada">
+                            <X size={18} />
+                        </button>
+                        <img src={zoomedImage} alt="Imagem ampliada do produto" className="admin-lightbox-image" />
                     </section>
                 </div>
             ) : null}

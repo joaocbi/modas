@@ -7,7 +7,13 @@
     "subcategory": "Linho premium",
     "sizes": ["P", "M", "G"],
     "colors": ["Areia", "Off White"],
-    "images": ["/assets/product_1.jpg"],
+    "images": [
+      "/assets/ester01.png",
+      "/assets/ester02.png",
+      "/assets/ester03.png",
+      "/assets/ester04.png",
+      "/assets/ester05.png"
+    ],
     "paymentMethods": ["Pix", "Cartão de crédito", "Mercado Pago"],
     "price": 116.66,
     "oldPrice": 166.65,
@@ -17,7 +23,7 @@
     "mercadoPagoEnabled": false,
     "mercadoPagoLink": "",
     "badge": "-30% OFF",
-    "image": "/assets/product_1.jpg",
+    "image": "/assets/ester01.png",
     "featured": true
   },
   {
@@ -28,7 +34,13 @@
     "subcategory": "Casual chic",
     "sizes": ["P", "M"],
     "colors": ["Preto", "Verde"],
-    "images": ["/assets/product_2.jpg"],
+    "images": [
+      "/assets/ester06.png",
+      "/assets/ester07.png",
+      "/assets/ester09.png",
+      "/assets/ester10.png",
+      "/assets/product_2.jpg"
+    ],
     "paymentMethods": ["Pix", "Cartão de crédito", "Mercado Pago"],
     "price": 120.54,
     "oldPrice": 172.2,
@@ -38,7 +50,7 @@
     "mercadoPagoEnabled": false,
     "mercadoPagoLink": "",
     "badge": "-30% OFF",
-    "image": "/assets/product_2.jpg",
+    "image": "/assets/ester06.png",
     "featured": true
   },
   {
