@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import { getAdminSession, getAdminUnauthorizedResponse } from "../../../../lib/admin-session";
 import { createCoupon, deleteCoupon, getAllCoupons, updateCoupon } from "../../../../lib/coupon-store";
 
 export async function GET() {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
     const coupons = await getAllCoupons();
     return NextResponse.json({
         ok: true,
@@ -10,6 +16,11 @@ export async function GET() {
 }
 
 export async function POST(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
     try {
         const payload = await request.json();
         const coupon = await createCoupon(payload);
@@ -30,6 +41,11 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
     try {
         const payload = await request.json();
         const coupon = await updateCoupon(payload.id, payload);
@@ -50,6 +66,11 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
     try {
         const { searchParams } = new URL(request.url);
         await deleteCoupon(searchParams.get("id"));

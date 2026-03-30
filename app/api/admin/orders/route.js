@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
+import { getAdminSession, getAdminUnauthorizedResponse } from "../../../../lib/admin-session";
 import { createOrder, deleteOrder, getAllOrders, updateOrder } from "../../../../lib/order-store";
 
 export async function GET() {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
     const orders = await getAllOrders();
     return NextResponse.json({
         ok: true,
@@ -10,6 +16,11 @@ export async function GET() {
 }
 
 export async function POST(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
     try {
         const payload = await request.json();
         const order = await createOrder(payload);
@@ -30,6 +41,11 @@ export async function POST(request) {
 }
 
 export async function PATCH(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
     try {
         const payload = await request.json();
         const order = await updateOrder(payload.id, payload);
@@ -50,6 +66,11 @@ export async function PATCH(request) {
 }
 
 export async function DELETE(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
     try {
         const { searchParams } = new URL(request.url);
         await deleteOrder(searchParams.get("id"));

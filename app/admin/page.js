@@ -1,4 +1,5 @@
 import { AdminDashboard } from "../../components/admin-dashboard";
+import { redirect } from "next/navigation";
 import { getAllCoupons } from "../../lib/coupon-store";
 import { getAllLeads } from "../../lib/lead-store";
 import { getAllOrders } from "../../lib/order-store";
@@ -13,6 +14,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
     const session = await getAdminSession();
+
+    if (!session) {
+        redirect("/admin/login");
+    }
+
     const [products, orders, coupons, leads] = await Promise.all([
         getAllProducts(),
         getAllOrders(),

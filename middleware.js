@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 const SESSION_COOKIE_NAME = "modas-admin-session";
+const ADMIN_UNAUTHORIZED_MESSAGE = "Sessão admin inválida ou expirada.";
 
 function getSessionSecret() {
     const secret = process.env.ADMIN_SESSION_SECRET;
@@ -14,6 +15,7 @@ function getSessionSecret() {
 export async function middleware(request) {
     const { pathname } = request.nextUrl;
     const isAdminLoginRoute = pathname === "/admin/login" || pathname === "/api/admin/login";
+    const isAdminApiRoute = pathname.startsWith("/api/admin/");
 
     if (isAdminLoginRoute) {
         return NextResponse.next();
@@ -23,6 +25,16 @@ export async function middleware(request) {
     const secret = getSessionSecret();
 
     if (!token || !secret) {
+        if (isAdminApiRoute) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    message: ADMIN_UNAUTHORIZED_MESSAGE,
+                },
+                { status: 401 }
+            );
+        }
+
         const loginUrl = new URL("/admin/login", request.url);
         return NextResponse.redirect(loginUrl);
     }
@@ -66,6 +78,17 @@ export async function middleware(request) {
         return NextResponse.next();
     } catch (error) {
         console.log("[Middleware] Invalid admin session.", error);
+
+        if (isAdminApiRoute) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    message: ADMIN_UNAUTHORIZED_MESSAGE,
+                },
+                { status: 401 }
+            );
+        }
+
         const loginUrl = new URL("/admin/login", request.url);
         return NextResponse.redirect(loginUrl);
     }
