@@ -6,6 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débito", "Boleto", "Mercado Pago"];
 const DEFAULT_PRODUCT_IMAGE = "/assets/product_1.jpg";
 const MAX_PRODUCT_IMAGES = 10;
+const MAX_IMAGE_DIMENSION = 1400;
+const MAX_IMAGE_PAYLOAD_BYTES = 260 * 1024;
+const MAX_PRODUCT_REQUEST_BYTES = 4 * 1024 * 1024;
 
 function normalizeClientImages(images) {
     return [...new Set((images || []).map((item) => String(item || "").trim()).filter(Boolean))].slice(0, MAX_PRODUCT_IMAGES);
@@ -18,6 +21,81 @@ function readFileAsDataUrl(file) {
         reader.onerror = () => reject(new Error("Failed to read image file."));
         reader.readAsDataURL(file);
     });
+}
+
+function loadImageFromFile(file) {
+    return new Promise((resolve, reject) => {
+        const imageUrl = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+            URL.revokeObjectURL(imageUrl);
+            resolve(image);
+        };
+        image.onerror = () => {
+            URL.revokeObjectURL(imageUrl);
+            reject(new Error("Failed to load image file."));
+        };
+        image.src = imageUrl;
+    });
+}
+
+function canvasToDataUrl(canvas, mimeType, quality) {
+    try {
+        return canvas.toDataURL(mimeType, quality);
+    } catch (error) {
+        return canvas.toDataURL("image/jpeg", quality);
+    }
+}
+
+async function optimizeImageFile(file) {
+    if (!file.type.startsWith("image/")) {
+        return readFileAsDataUrl(file);
+    }
+
+    const image = await loadImageFromFile(file);
+    let width = image.naturalWidth || image.width;
+    let height = image.naturalHeight || image.height;
+    const largestSide = Math.max(width, height);
+
+    if (largestSide > MAX_IMAGE_DIMENSION) {
+        const scale = MAX_IMAGE_DIMENSION / largestSide;
+        width = Math.max(1, Math.round(width * scale));
+        height = Math.max(1, Math.round(height * scale));
+    }
+
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+        return readFileAsDataUrl(file);
+    }
+
+    let currentWidth = width;
+    let currentHeight = height;
+    let quality = 0.82;
+    let optimizedImage = "";
+
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+        canvas.width = currentWidth;
+        canvas.height = currentHeight;
+        context.clearRect(0, 0, currentWidth, currentHeight);
+        context.drawImage(image, 0, 0, currentWidth, currentHeight);
+        optimizedImage = canvasToDataUrl(canvas, "image/webp", quality);
+
+        if (new Blob([optimizedImage]).size <= MAX_IMAGE_PAYLOAD_BYTES) {
+            return optimizedImage;
+        }
+
+        quality = Math.max(0.5, quality - 0.08);
+        currentWidth = Math.max(600, Math.round(currentWidth * 0.88));
+        currentHeight = Math.max(600, Math.round(currentHeight * 0.88));
+    }
+
+    return optimizedImage || readFileAsDataUrl(file);
+}
+
+function getPayloadSizeInBytes(payload) {
+    return new Blob([JSON.stringify(payload)]).size;
 }
 
 function parseDecimalValue(value) {
@@ -175,7 +253,22 @@ async function sendAdminRequest(url, method, payload) {
         body: payload ? JSON.stringify(payload) : undefined,
     });
 
-    const data = await response.json();
+    const responseContentType = response.headers.get("content-type") || "";
+    let data;
+
+    if (responseContentType.includes("application/json")) {
+        data = await response.json();
+    } else {
+        const text = await response.text();
+        data = {
+            ok: false,
+            message:
+                response.status === 413
+                    ? "As imagens ficaram muito pesadas para envio. Reduza a quantidade ou use arquivos menores."
+                    : text || "O servidor retornou uma resposta inválida.",
+        };
+    }
+
     return { response, data };
 }
 
@@ -589,7 +682,7 @@ export function AdminDashboard({
         const filesToLoad = files.slice(0, remainingSlots);
 
         try {
-            const uploadedImages = await Promise.all(filesToLoad.map(readFileAsDataUrl));
+            const uploadedImages = await Promise.all(filesToLoad.map(optimizeImageFile));
             const nextImages = [...currentImages, ...uploadedImages];
 
             console.log("[AdminDashboard] Product images uploaded.", {
@@ -601,8 +694,8 @@ export function AdminDashboard({
             showStatus(
                 "success",
                 files.length > filesToLoad.length
-                    ? `Foram carregadas ${uploadedImages.length} imagens. O limite por produto é ${MAX_PRODUCT_IMAGES}.`
-                    : `${uploadedImages.length} imagem(ns) carregada(s) com sucesso para este produto.`
+                    ? `Foram carregadas ${uploadedImages.length} imagens otimizadas. O limite por produto é ${MAX_PRODUCT_IMAGES}.`
+                    : `${uploadedImages.length} imagem(ns) otimizada(s) e carregada(s) com sucesso para este produto.`
             );
         } catch (error) {
             console.log("[AdminDashboard] Failed to upload product images.", error);
@@ -631,6 +724,12 @@ export function AdminDashboard({
                 mercadoPagoEnabled: Boolean(productForm.mercadoPagoEnabled),
                 images: normalizeClientImages(productForm.images),
             };
+
+            if (getPayloadSizeInBytes(payload) > MAX_PRODUCT_REQUEST_BYTES) {
+                showStatus("warning", "As imagens deste produto ainda estão muito pesadas. Remova algumas imagens ou envie arquivos menores.");
+                return;
+            }
+
             const { response, data } = await sendAdminRequest("/api/admin/products", isEditing ? "PATCH" : "POST", payload);
             console.log("[AdminDashboard] Product response.", data);
 
@@ -642,7 +741,7 @@ export function AdminDashboard({
             setProducts((currentProducts) =>
                 isEditing
                     ? currentProducts.map((product) => (Number(product.id) === Number(data.product.id) ? data.product : product))
-                    : [...currentProducts, data.product]
+                    : [data.product, ...currentProducts]
             );
 
             closeProductModal();

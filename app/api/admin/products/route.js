@@ -25,8 +25,9 @@ export async function POST(request) {
     try {
         const payload = await request.json();
         const product = await createProduct(payload);
-        revalidatePath("/");
-        revalidatePath("/produtos");
+        revalidatePath("/", "page");
+        revalidatePath("/produtos", "page");
+        console.log("[AdminProducts] Revalidated public product pages after create.", { productId: product.id });
         return NextResponse.json({
             ok: true,
             product,
@@ -52,8 +53,9 @@ export async function PATCH(request) {
     try {
         const payload = await request.json();
         const product = await updateProduct(payload.id, payload);
-        revalidatePath("/");
-        revalidatePath("/produtos");
+        revalidatePath("/", "page");
+        revalidatePath("/produtos", "page");
+        console.log("[AdminProducts] Revalidated public product pages after update.", { productId: product.id });
         return NextResponse.json({
             ok: true,
             product,
@@ -78,9 +80,11 @@ export async function DELETE(request) {
 
     try {
         const { searchParams } = new URL(request.url);
-        await deleteProduct(searchParams.get("id"));
-        revalidatePath("/");
-        revalidatePath("/produtos");
+        const productId = searchParams.get("id");
+        await deleteProduct(productId);
+        revalidatePath("/", "page");
+        revalidatePath("/produtos", "page");
+        console.log("[AdminProducts] Revalidated public product pages after delete.", { productId });
         return NextResponse.json({
             ok: true,
         });
