@@ -179,20 +179,6 @@ async function sendAdminRequest(url, method, payload) {
     return { response, data };
 }
 
-async function loadAdminProducts() {
-    const response = await fetch("/api/admin/products", {
-        method: "GET",
-        cache: "no-store",
-    });
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(data.message || "Nao foi possivel recarregar os produtos.");
-    }
-
-    return data.products || [];
-}
-
 function MetricCard({ label, value, help }) {
     return (
         <article className="content-card admin-metric-card">
@@ -653,20 +639,11 @@ export function AdminDashboard({
                 return;
             }
 
-            try {
-                const latestProducts = await loadAdminProducts();
-                setProducts(latestProducts);
-                console.log("[AdminDashboard] Product list refreshed after save.", {
-                    count: latestProducts.length,
-                });
-            } catch (refreshError) {
-                console.log("[AdminDashboard] Failed to refresh product list after save.", refreshError);
-                setProducts((currentProducts) =>
-                    isEditing
-                        ? currentProducts.map((product) => (Number(product.id) === Number(data.product.id) ? data.product : product))
-                        : [...currentProducts, data.product]
-                );
-            }
+            setProducts((currentProducts) =>
+                isEditing
+                    ? currentProducts.map((product) => (Number(product.id) === Number(data.product.id) ? data.product : product))
+                    : [...currentProducts, data.product]
+            );
 
             closeProductModal();
             showStatus(

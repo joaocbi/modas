@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getAdminSession, getAdminUnauthorizedResponse } from "../../../../lib/admin-session";
 import { createProduct, deleteProduct, getAllProducts, updateProduct } from "../../../../lib/product-store";
 
@@ -24,6 +25,8 @@ export async function POST(request) {
     try {
         const payload = await request.json();
         const product = await createProduct(payload);
+        revalidatePath("/");
+        revalidatePath("/produtos");
         return NextResponse.json({
             ok: true,
             product,
@@ -49,6 +52,8 @@ export async function PATCH(request) {
     try {
         const payload = await request.json();
         const product = await updateProduct(payload.id, payload);
+        revalidatePath("/");
+        revalidatePath("/produtos");
         return NextResponse.json({
             ok: true,
             product,
@@ -74,6 +79,8 @@ export async function DELETE(request) {
     try {
         const { searchParams } = new URL(request.url);
         await deleteProduct(searchParams.get("id"));
+        revalidatePath("/");
+        revalidatePath("/produtos");
         return NextResponse.json({
             ok: true,
         });

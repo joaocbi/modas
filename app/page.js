@@ -10,7 +10,7 @@ const newsletterFields = [
     { name: "email", label: "Seu e-mail", type: "email", placeholder: "Digite seu melhor e-mail" },
 ];
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function HomePage() {
     const products = await getAllProducts();

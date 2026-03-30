@@ -6,7 +6,7 @@ export const metadata = {
     title: "Produtos | DeVille Fashion",
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function ProductsPage() {
     const products = await getAllProducts();
