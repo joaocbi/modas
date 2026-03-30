@@ -23,7 +23,7 @@ export default function ContactPage() {
                         <p className="section-kicker">Fale conosco</p>
                         <h1>Atendimento real por WhatsApp e e-mail</h1>
                         <p>
-                            Nossa equipe está pronta para ajudar com pedidos, trocas, retirada, disponibilidade de tamanhos
+                            Nossa equipe está pronta para ajudar com pedidos, trocas, disponibilidade de tamanhos
                             e orientações de compra.
                         </p>
                         <div className="info-stack">

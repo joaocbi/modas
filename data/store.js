@@ -15,7 +15,6 @@ export const navigation = [
     { label: "Início", href: "/" },
     { label: "Produtos", href: "/produtos" },
     { label: "Contato", href: "/contato" },
-    { label: "Retirada", href: "/retirada" },
     { label: "Políticas de trocas", href: "/politicas-de-trocas" },
     { label: "Perguntas frequentes", href: "/perguntas-frequentes" },
     { label: "Como comprar", href: "/como-comprar" },
@@ -62,33 +61,7 @@ export const howToBuySteps = [
     },
     {
         title: "Recebimento flexível",
-        description: "Defina se prefere entrega no endereço ou retirada em loja com atendimento personalizado.",
-    },
-];
-
-export const pickupDetails = [
-    {
-        title: "Horário para retirada",
-        items: ["Segunda a sexta: das 09h às 18h", "Sábado: das 09h às 13h"],
-    },
-    {
-        title: "Prazo para retirada",
-        items: [
-            "A equipe avisa quando o pedido estiver disponível.",
-            "Após a liberação, o prazo para retirada é de até 3 dias corridos.",
-        ],
-    },
-    {
-        title: "O que apresentar",
-        items: ["Documento com foto", "Número do pedido ou comprovante da compra"],
-    },
-    {
-        title: "Retirada por terceiros",
-        items: [
-            "Autorização do titular da compra",
-            "Documento com foto do responsável pela retirada",
-            "Cópia ou foto do documento do comprador",
-        ],
+        description: "Defina se prefere entrega no endereço e finalize o atendimento com a equipe.",
     },
 ];
 
@@ -120,10 +93,6 @@ export const faqItems = [
         answer: "Você pode navegar pela coleção, escolher a peça desejada e falar com a equipe pelo WhatsApp para concluir o atendimento de forma rápida.",
     },
     {
-        question: "Posso retirar o pedido na loja?",
-        answer: "Sim. A retirada pode ser feita em horário comercial após a confirmação de disponibilidade enviada pela equipe.",
-    },
-    {
         question: "Vocês fazem troca por tamanho?",
         answer: "Sim. Trocas por tamanho ou preferência podem ser solicitadas em até 7 dias corridos após o recebimento, com o produto sem uso.",
     },
@@ -136,7 +105,7 @@ export const faqItems = [
 export const contactHighlights = [
     "Atendimento humanizado e rápido.",
     "Suporte por WhatsApp e e-mail real.",
-    "Auxílio para pedidos, trocas, retirada e cadastro.",
+    "Auxílio para pedidos, trocas e cadastro.",
 ];
 
 export function getProductWhatsAppLink(product) {

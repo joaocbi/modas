@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Camera, CreditCard, Mail, MapPinCheckInside, Truck, WalletCards } from "lucide-react";
+import { Camera, CreditCard, Mail, Truck, WalletCards } from "lucide-react";
 import { navigation, store } from "../data/store";
 
 export function Footer() {
@@ -28,10 +28,7 @@ export function Footer() {
                             <Mail size={16} />
                             {store.email}
                         </a>
-                        <span>
-                            <MapPinCheckInside size={16} />
-                            Atendimento com retirada em loja
-                        </span>
+                        <span>Atendimento personalizado</span>
                     </div>
                 </div>
 
