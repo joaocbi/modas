@@ -17,6 +17,12 @@ const playfairDisplay = Playfair_Display({
 export const metadata = {
     title: "DeVille Fashion",
     description: "Moda feminina com curadoria elegante, atendimento próximo e compra facilitada por WhatsApp.",
+    icons: {
+        icon: "/icon.svg",
+        shortcut: "/icon.svg",
+        apple: "/apple-icon",
+    },
+    manifest: "/manifest.webmanifest",
 };
 
 export default function RootLayout({ children }) {
