@@ -42,8 +42,8 @@ export const heroSlides = [
 ];
 
 export const promotions = [
-    { image: "/assets/promo_1.jpg", title: "Seleção especial", subtitle: "Peças com acabamento elegante e toque leve." },
-    { image: "/assets/promo_2.jpg", title: "Essenciais da estação", subtitle: "Modelos versáteis para compor produções refinadas." },
+    { image: "/assets/promotion1.png", title: "Seleção especial", subtitle: "Peças com acabamento elegante e toque leve." },
+    { image: "/assets/promotion2.png", title: "Essenciais da estação", subtitle: "Modelos versáteis para compor produções refinadas." },
 ];
 
 export const howToBuySteps = [
