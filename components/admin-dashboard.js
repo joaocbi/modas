@@ -7,7 +7,7 @@ const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débit
 const DEFAULT_PRODUCT_IMAGE = "/assets/product_1.jpg";
 const MAX_PRODUCT_IMAGES = 10;
 const MAX_IMAGE_DIMENSION = 1400;
-const MAX_IMAGE_PAYLOAD_BYTES = 260 * 1024;
+const MAX_IMAGE_FILE_BYTES = 260 * 1024;
 const MAX_PRODUCT_REQUEST_BYTES = 4 * 1024 * 1024;
 
 function normalizeClientImages(images) {
@@ -39,17 +39,29 @@ function loadImageFromFile(file) {
     });
 }
 
-function canvasToDataUrl(canvas, mimeType, quality) {
-    try {
-        return canvas.toDataURL(mimeType, quality);
-    } catch (error) {
-        return canvas.toDataURL("image/jpeg", quality);
+function canvasToBlob(canvas, mimeType, quality) {
+    return new Promise((resolve) => {
+        canvas.toBlob((blob) => resolve(blob), mimeType, quality);
+    });
+}
+
+function getOptimizedFileName(fileName, contentType) {
+    const baseName = String(fileName || "produto").replace(/\.[^.]+$/, "");
+
+    if (contentType === "image/jpeg") {
+        return `${baseName}.jpg`;
     }
+
+    if (contentType === "image/png") {
+        return `${baseName}.png`;
+    }
+
+    return `${baseName}.webp`;
 }
 
 async function optimizeImageFile(file) {
     if (!file.type.startsWith("image/")) {
-        return readFileAsDataUrl(file);
+        return file;
     }
 
     const image = await loadImageFromFile(file);
@@ -67,22 +79,34 @@ async function optimizeImageFile(file) {
     const context = canvas.getContext("2d");
 
     if (!context) {
-        return readFileAsDataUrl(file);
+        return file;
     }
 
     let currentWidth = width;
     let currentHeight = height;
     let quality = 0.82;
-    let optimizedImage = "";
+    let optimizedImage = file;
 
     for (let attempt = 0; attempt < 6; attempt += 1) {
         canvas.width = currentWidth;
         canvas.height = currentHeight;
         context.clearRect(0, 0, currentWidth, currentHeight);
         context.drawImage(image, 0, 0, currentWidth, currentHeight);
-        optimizedImage = canvasToDataUrl(canvas, "image/webp", quality);
+        let blob = await canvasToBlob(canvas, "image/webp", quality);
 
-        if (new Blob([optimizedImage]).size <= MAX_IMAGE_PAYLOAD_BYTES) {
+        if (!blob) {
+            blob = await canvasToBlob(canvas, "image/jpeg", quality);
+        }
+
+        if (!blob) {
+            return file;
+        }
+
+        optimizedImage = new File([blob], getOptimizedFileName(file.name, blob.type), {
+            type: blob.type || "image/webp",
+        });
+
+        if (optimizedImage.size <= MAX_IMAGE_FILE_BYTES) {
             return optimizedImage;
         }
 
@@ -91,11 +115,28 @@ async function optimizeImageFile(file) {
         currentHeight = Math.max(600, Math.round(currentHeight * 0.88));
     }
 
-    return optimizedImage || readFileAsDataUrl(file);
+    return optimizedImage || file;
 }
 
 function getPayloadSizeInBytes(payload) {
     return new Blob([JSON.stringify(payload)]).size;
+}
+
+async function parseApiResponse(response) {
+    const responseContentType = response.headers.get("content-type") || "";
+
+    if (responseContentType.includes("application/json")) {
+        return response.json();
+    }
+
+    const text = await response.text();
+    return {
+        ok: false,
+        message:
+            response.status === 413
+                ? "As imagens ficaram muito pesadas para envio. Reduza a quantidade ou use arquivos menores."
+                : text || "O servidor retornou uma resposta inválida.",
+    };
 }
 
 function parseDecimalValue(value) {
@@ -253,22 +294,19 @@ async function sendAdminRequest(url, method, payload) {
         body: payload ? JSON.stringify(payload) : undefined,
     });
 
-    const responseContentType = response.headers.get("content-type") || "";
-    let data;
+    const data = await parseApiResponse(response);
+    return { response, data };
+}
 
-    if (responseContentType.includes("application/json")) {
-        data = await response.json();
-    } else {
-        const text = await response.text();
-        data = {
-            ok: false,
-            message:
-                response.status === 413
-                    ? "As imagens ficaram muito pesadas para envio. Reduza a quantidade ou use arquivos menores."
-                    : text || "O servidor retornou uma resposta inválida.",
-        };
-    }
+async function uploadProductImages(files) {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
 
+    const response = await fetch("/api/admin/product-images", {
+        method: "POST",
+        body: formData,
+    });
+    const data = await parseApiResponse(response);
     return { response, data };
 }
 
@@ -329,6 +367,7 @@ export function AdminDashboard({
     adminEmail,
     storageMode,
     canManage,
+    canUploadProductImages,
 }) {
     const [products, setProducts] = useState(initialProducts);
     const [orders, setOrders] = useState(initialOrders);
@@ -342,6 +381,7 @@ export function AdminDashboard({
     const [statusMessage, setStatusMessage] = useState("");
     const [statusType, setStatusType] = useState("success");
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploadingImages, setIsUploadingImages] = useState(false);
     const [imagePreview, setImagePreview] = useState("/assets/product_1.jpg");
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [zoomedImage, setZoomedImage] = useState("");
@@ -682,7 +722,24 @@ export function AdminDashboard({
         const filesToLoad = files.slice(0, remainingSlots);
 
         try {
-            const uploadedImages = await Promise.all(filesToLoad.map(optimizeImageFile));
+            setIsUploadingImages(true);
+            showStatus("success", "Otimizando e enviando imagens...");
+            const optimizedFiles = await Promise.all(filesToLoad.map(optimizeImageFile));
+            let uploadedImages = [];
+
+            if (canUploadProductImages) {
+                const { response, data } = await uploadProductImages(optimizedFiles);
+
+                if (!response.ok) {
+                    showStatus("warning", data.message || "Nao foi possivel enviar as imagens do produto.");
+                    return;
+                }
+
+                uploadedImages = normalizeClientImages(data.images);
+            } else {
+                uploadedImages = await Promise.all(optimizedFiles.map(readFileAsDataUrl));
+            }
+
             const nextImages = [...currentImages, ...uploadedImages];
 
             console.log("[AdminDashboard] Product images uploaded.", {
@@ -695,12 +752,13 @@ export function AdminDashboard({
                 "success",
                 files.length > filesToLoad.length
                     ? `Foram carregadas ${uploadedImages.length} imagens otimizadas. O limite por produto é ${MAX_PRODUCT_IMAGES}.`
-                    : `${uploadedImages.length} imagem(ns) otimizada(s) e carregada(s) com sucesso para este produto.`
+                    : `${uploadedImages.length} imagem(ns) otimizada(s) e carregada(s) com sucesso para este produto.${canUploadProductImages ? "" : " Armazenamento persistente ainda não configurado neste ambiente."}`
             );
         } catch (error) {
             console.log("[AdminDashboard] Failed to upload product images.", error);
             showStatus("warning", "Nao foi possivel carregar a imagem selecionada.");
         } finally {
+            setIsUploadingImages(false);
             event.target.value = "";
         }
     }
@@ -1245,8 +1303,11 @@ export function AdminDashboard({
                             </label>
                             <label className="field field-full">
                                 <span>Upload de imagens em alta resolução</span>
-                                <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={!canManage} />
-                                <small className="field-help">Selecione até {MAX_PRODUCT_IMAGES} imagens. A primeira vira a capa principal do produto.</small>
+                                <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={!canManage || isUploadingImages} />
+                                <small className="field-help">
+                                    Selecione até {MAX_PRODUCT_IMAGES} imagens. A primeira vira a capa principal do produto.
+                                    {isUploadingImages ? " Enviando imagens..." : ""}
+                                </small>
                             </label>
                             <div className="field field-full admin-image-gallery-editor">
                                 <span>Galeria do produto</span>
@@ -1365,7 +1426,9 @@ export function AdminDashboard({
                             <label className="field admin-checkbox-field"><span>Recebimento com Mercado Pago</span><input type="checkbox" checked={productForm.mercadoPagoEnabled} onChange={(event) => updateProductField("mercadoPagoEnabled", event.target.checked)} disabled={!canManage} /></label>
                             <label className="field field-full"><span>Link do Mercado Pago</span><input value={productForm.mercadoPagoLink} onChange={(event) => updateProductField("mercadoPagoLink", event.target.value)} placeholder="https://www.mercadopago.com.br/..." disabled={!canManage || !productForm.mercadoPagoEnabled} /></label>
                             <div className="form-actions field-full admin-modal-actions">
-                                <button type="submit" className="primary-button" disabled={isSaving || !canManage}>{isSaving ? "Salvando..." : productForm.id ? "Atualizar produto" : "Criar produto"}</button>
+                                <button type="submit" className="primary-button" disabled={isSaving || isUploadingImages || !canManage}>
+                                    {isUploadingImages ? "Enviando imagens..." : isSaving ? "Salvando..." : productForm.id ? "Atualizar produto" : "Criar produto"}
+                                </button>
                                 <button type="button" className="secondary-button" onClick={closeProductModal}>Cancelar</button>
                             </div>
                         </form>

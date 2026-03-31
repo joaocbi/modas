@@ -4,6 +4,7 @@ import { getAllCoupons } from "../../lib/coupon-store";
 import { getAllLeads } from "../../lib/lead-store";
 import { getAllOrders } from "../../lib/order-store";
 import { getAllProducts, getStorageMode, isAdminMutationEnabled } from "../../lib/product-store";
+import { canStoreProductImages } from "../../lib/product-image-store";
 import { getAdminSession } from "../../lib/admin-session";
 
 export const metadata = {
@@ -27,6 +28,7 @@ export default async function AdminPage() {
     ]);
     const storageMode = getStorageMode();
     const canManage = isAdminMutationEnabled();
+    const canUploadProductImages = canStoreProductImages();
 
     return (
         <AdminDashboard
@@ -37,6 +39,7 @@ export default async function AdminPage() {
             adminEmail={session?.email || "admin"}
             storageMode={storageMode}
             canManage={canManage}
+            canUploadProductImages={canUploadProductImages}
         />
     );
 }
