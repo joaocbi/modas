@@ -183,12 +183,13 @@ img {
 .category-carousel-shell {
     width: min(calc(100% - 32px), var(--max-width));
     margin: 18px auto 0;
+    overflow: hidden;
 }
 
 .category-carousel-header {
     display: flex;
     align-items: flex-end;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 16px;
     margin-bottom: 16px;
 }
@@ -199,37 +200,56 @@ img {
     font-size: clamp(1.5rem, 3vw, 2rem);
 }
 
-.category-carousel-controls {
-    display: flex;
-    gap: 10px;
+.category-carousel-viewport {
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 8px;
+}
+
+.category-carousel-viewport::before,
+.category-carousel-viewport::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 8px;
+    width: 52px;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.category-carousel-viewport::before {
+    left: 0;
+    background: linear-gradient(90deg, var(--color-bg), rgba(248, 247, 242, 0));
+}
+
+.category-carousel-viewport::after {
+    right: 0;
+    background: linear-gradient(270deg, var(--color-bg), rgba(248, 247, 242, 0));
 }
 
 .category-carousel-track {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(220px, 260px);
+    display: flex;
     gap: 18px;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scroll-snap-type: x proximity;
+    width: max-content;
+    animation: category-carousel-marquee var(--category-carousel-duration, 24s) linear infinite;
+    will-change: transform;
 }
 
-.category-carousel-track::-webkit-scrollbar {
-    height: 8px;
-}
-
-.category-carousel-track::-webkit-scrollbar-thumb {
-    background: rgba(21, 21, 21, 0.18);
-    border-radius: 999px;
+.category-carousel-viewport:hover .category-carousel-track,
+.category-carousel-viewport:focus-within .category-carousel-track {
+    animation-play-state: paused;
 }
 
 .category-carousel-card {
+    flex: 0 0 auto;
+    min-width: 220px;
+    max-width: 260px;
+    width: min(260px, calc(100vw - 96px));
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-soft);
     overflow: hidden;
-    scroll-snap-align: start;
     transition: transform var(--transition), box-shadow var(--transition);
 }
 
@@ -264,6 +284,16 @@ img {
 .category-carousel-copy span {
     color: var(--color-text-muted);
     font-size: 0.92rem;
+}
+
+@keyframes category-carousel-marquee {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(calc(-50% - 9px));
+    }
 }
 
 .nav-link {
@@ -1688,8 +1718,8 @@ img {
         align-items: flex-start;
     }
 
-    .category-carousel-track {
-        grid-auto-columns: minmax(180px, 72vw);
+    .category-carousel-card {
+        width: min(220px, calc(100vw - 80px));
     }
 
     .main-nav.is-open {
