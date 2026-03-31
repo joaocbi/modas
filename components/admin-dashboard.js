@@ -14,6 +14,39 @@ function normalizeClientImages(images) {
     return [...new Set((images || []).map((item) => String(item || "").trim()).filter(Boolean))].slice(0, MAX_PRODUCT_IMAGES);
 }
 
+function getUniqueOptionValues(values) {
+    const uniqueValues = new Map();
+
+    values.forEach((value) => {
+        const normalizedValue = String(value || "").trim();
+
+        if (!normalizedValue) {
+            return;
+        }
+
+        const normalizedKey = normalizedValue.toLocaleLowerCase("pt-BR");
+
+        if (!uniqueValues.has(normalizedKey)) {
+            uniqueValues.set(normalizedKey, normalizedValue);
+        }
+    });
+
+    return [...uniqueValues.values()].sort((leftValue, rightValue) => leftValue.localeCompare(rightValue, "pt-BR", { sensitivity: "base" }));
+}
+
+function getCategoryOptions(products) {
+    return getUniqueOptionValues(products.map((category) => category.name));
+}
+
+function getSubcategoryOptions(products, category) {
+    const normalizedCategory = String(category || "").trim().toLocaleLowerCase("pt-BR");
+    const selectedCategory = normalizedCategory
+        ? products.find((product) => String(product.name || "").trim().toLocaleLowerCase("pt-BR") === normalizedCategory)
+        : null;
+
+    return getUniqueOptionValues((selectedCategory?.subcategories || []).map((subcategory) => subcategory.name));
+}
+
 function readFileAsDataUrl(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -274,6 +307,19 @@ function getEmptyCouponForm() {
     };
 }
 
+function getEmptyProductCategoryForm() {
+    return {
+        name: "",
+    };
+}
+
+function getEmptyProductSubcategoryForm(categories = []) {
+    return {
+        categoryId: String(categories[0]?.id || ""),
+        name: "",
+    };
+}
+
 function formatCurrency(value) {
     return new Intl.NumberFormat("pt-BR", {
         style: "currency",
@@ -364,6 +410,7 @@ export function AdminDashboard({
     initialOrders,
     initialCoupons,
     initialLeads,
+    initialProductCategories,
     adminEmail,
     storageMode,
     canManage,
@@ -373,9 +420,12 @@ export function AdminDashboard({
     const [orders, setOrders] = useState(initialOrders);
     const [coupons, setCoupons] = useState(initialCoupons);
     const [leads, setLeads] = useState(initialLeads);
+    const [productCategories, setProductCategories] = useState(initialProductCategories);
     const [productForm, setProductForm] = useState(getEmptyProductForm());
     const [orderForm, setOrderForm] = useState(getEmptyOrderForm());
     const [couponForm, setCouponForm] = useState(getEmptyCouponForm());
+    const [productCategoryForm, setProductCategoryForm] = useState(getEmptyProductCategoryForm());
+    const [productSubcategoryForm, setProductSubcategoryForm] = useState(getEmptyProductSubcategoryForm(initialProductCategories));
     const [activeTab, setActiveTab] = useState("overview");
     const [searchTerm, setSearchTerm] = useState("");
     const [statusMessage, setStatusMessage] = useState("");
@@ -468,6 +518,19 @@ export function AdminDashboard({
             )
         );
     }, [leads, searchTerm]);
+    const categoryOptions = useMemo(() => getCategoryOptions(productCategories), [productCategories]);
+    const subcategoryOptions = useMemo(
+        () => getSubcategoryOptions(productCategories, productForm.category),
+        [productCategories, productForm.category]
+    );
+    const categorySelectOptions = useMemo(
+        () => getUniqueOptionValues([...categoryOptions, productForm.category]),
+        [categoryOptions, productForm.category]
+    );
+    const subcategorySelectOptions = useMemo(
+        () => getUniqueOptionValues([...subcategoryOptions, productForm.subcategory]),
+        [subcategoryOptions, productForm.subcategory]
+    );
 
     function showStatus(type, message) {
         setStatusType(type);
@@ -507,6 +570,22 @@ export function AdminDashboard({
         setCouponForm(getEmptyCouponForm());
     }
 
+    function resetProductCategoryForm() {
+        setProductCategoryForm(getEmptyProductCategoryForm());
+    }
+
+    function resetProductSubcategoryForm() {
+        setProductSubcategoryForm(getEmptyProductSubcategoryForm(productCategories));
+    }
+
+    function updateProductCategoryFormField(name, value) {
+        setProductCategoryForm((current) => ({ ...current, [name]: value }));
+    }
+
+    function updateProductSubcategoryFormField(name, value) {
+        setProductSubcategoryForm((current) => ({ ...current, [name]: value }));
+    }
+
     function updateProductField(name, value) {
         const normalizedValue = ["oldPrice", "costPrice", "salesFeePercentage"].includes(name) ? sanitizeDecimalInput(value) : value;
 
@@ -523,6 +602,24 @@ export function AdminDashboard({
         if (name === "image") {
             setImagePreview(String(value || "") || DEFAULT_PRODUCT_IMAGE);
         }
+    }
+
+    function handleProductCategoryChange(value) {
+        setProductForm((current) => {
+            const nextCategory = String(value || "");
+            const nextSubcategoryOptions = getSubcategoryOptions(productCategories, nextCategory);
+            const shouldKeepSubcategory = nextSubcategoryOptions.some(
+                (subcategory) =>
+                    String(subcategory || "").trim().toLocaleLowerCase("pt-BR") ===
+                    String(current.subcategory || "").trim().toLocaleLowerCase("pt-BR")
+            );
+
+            return {
+                ...current,
+                category: nextCategory,
+                subcategory: shouldKeepSubcategory ? current.subcategory : "",
+            };
+        });
     }
 
     function applyProductImages(nextImages, preferredPreviewImage, options = {}) {
@@ -796,6 +893,7 @@ export function AdminDashboard({
                 return;
             }
 
+            setProductCategories(data.categories || productCategories);
             setProducts((currentProducts) =>
                 isEditing
                     ? currentProducts.map((product) => (Number(product.id) === Number(data.product.id) ? data.product : product))
@@ -817,6 +915,121 @@ export function AdminDashboard({
         }
     }
 
+    async function handleProductCategorySubmit(event) {
+        event.preventDefault();
+        setIsSaving(true);
+        setStatusMessage("");
+
+        try {
+            const { response, data } = await sendAdminRequest("/api/admin/product-categories", "POST", {
+                type: "category",
+                name: productCategoryForm.name,
+            });
+
+            if (!response.ok) {
+                showStatus("warning", data.message || "Nao foi possivel salvar a categoria.");
+                return;
+            }
+
+            setProductCategories(data.categories || []);
+            resetProductCategoryForm();
+            showStatus("success", "Categoria cadastrada com sucesso.");
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to save product category.", error);
+            showStatus("warning", "Ocorreu um erro ao salvar a categoria.");
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    async function handleProductSubcategorySubmit(event) {
+        event.preventDefault();
+        setIsSaving(true);
+        setStatusMessage("");
+
+        try {
+            const selectedCategory = productCategories.find(
+                (category) => String(category.id) === String(productSubcategoryForm.categoryId)
+            );
+            const { response, data } = await sendAdminRequest("/api/admin/product-categories", "POST", {
+                type: "subcategory",
+                categoryId: Number(productSubcategoryForm.categoryId),
+                categoryName: selectedCategory?.name || "",
+                name: productSubcategoryForm.name,
+            });
+
+            if (!response.ok) {
+                showStatus("warning", data.message || "Nao foi possivel salvar a subcategoria.");
+                return;
+            }
+
+            setProductCategories(data.categories || []);
+            resetProductSubcategoryForm();
+            showStatus("success", "Subcategoria cadastrada com sucesso.");
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to save product subcategory.", error);
+            showStatus("warning", "Ocorreu um erro ao salvar a subcategoria.");
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    async function handleDeleteProductCategory(category) {
+        if (!window.confirm(`Deseja remover a categoria ${category.name}?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/product-categories?categoryId=${category.id}`, { method: "DELETE" });
+            const data = await parseApiResponse(response);
+
+            if (!response.ok) {
+                showStatus("warning", data.message || "Nao foi possivel remover a categoria.");
+                return;
+            }
+
+            setProductCategories(data.categories || []);
+            setProductForm((current) =>
+                String(current.category || "").trim().toLocaleLowerCase("pt-BR") === String(category.name || "").trim().toLocaleLowerCase("pt-BR")
+                    ? { ...current, category: "", subcategory: "" }
+                    : current
+            );
+            showStatus("success", "Categoria removida com sucesso.");
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to delete product category.", error);
+            showStatus("warning", "Ocorreu um erro ao remover a categoria.");
+        }
+    }
+
+    async function handleDeleteProductSubcategory(category, subcategory) {
+        if (!window.confirm(`Deseja remover a subcategoria ${subcategory.name}?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/product-categories?subcategoryId=${subcategory.id}`, { method: "DELETE" });
+            const data = await parseApiResponse(response);
+
+            if (!response.ok) {
+                showStatus("warning", data.message || "Nao foi possivel remover a subcategoria.");
+                return;
+            }
+
+            setProductCategories(data.categories || []);
+            setProductForm((current) =>
+                String(current.category || "").trim().toLocaleLowerCase("pt-BR") === String(category.name || "").trim().toLocaleLowerCase("pt-BR") &&
+                String(current.subcategory || "").trim().toLocaleLowerCase("pt-BR") ===
+                    String(subcategory.name || "").trim().toLocaleLowerCase("pt-BR")
+                    ? { ...current, subcategory: "" }
+                    : current
+            );
+            showStatus("success", "Subcategoria removida com sucesso.");
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to delete product subcategory.", error);
+            showStatus("warning", "Ocorreu um erro ao remover a subcategoria.");
+        }
+    }
+
     useEffect(() => {
         if (!isProductModalOpen && !zoomedImage) {
             return undefined;
@@ -829,6 +1042,19 @@ export function AdminDashboard({
             document.body.style.overflow = previousOverflow;
         };
     }, [isProductModalOpen, zoomedImage]);
+
+    useEffect(() => {
+        setProductSubcategoryForm((current) => {
+            if (productCategories.some((category) => String(category.id) === String(current.categoryId))) {
+                return current;
+            }
+
+            return {
+                ...current,
+                categoryId: String(productCategories[0]?.id || ""),
+            };
+        });
+    }, [productCategories]);
 
     async function handleOrderSubmit(event) {
         event.preventDefault();
@@ -1038,7 +1264,111 @@ export function AdminDashboard({
             ) : null}
 
             {activeTab === "products" ? (
-                <div className="admin-grid admin-grid-single">
+                <div className="admin-grid">
+                    <section className="contact-card">
+                        <div className="section-heading">
+                            <h2>Categorias e subcategorias</h2>
+                            <p>Cadastre as opções uma vez e reaproveite depois no formulário de produto.</p>
+                        </div>
+                        <form className="form-grid" onSubmit={handleProductCategorySubmit}>
+                            <label className="field">
+                                <span>Nova categoria</span>
+                                <input
+                                    value={productCategoryForm.name}
+                                    onChange={(event) => updateProductCategoryFormField("name", event.target.value)}
+                                    placeholder="Ex: Blusas"
+                                    required
+                                    disabled={!canManage}
+                                />
+                            </label>
+                            <div className="form-actions">
+                                <button type="submit" className="primary-button" disabled={isSaving || !canManage}>
+                                    {isSaving ? "Salvando..." : "Cadastrar categoria"}
+                                </button>
+                                <button type="button" className="secondary-button" onClick={resetProductCategoryForm} disabled={!canManage}>
+                                    Limpar
+                                </button>
+                            </div>
+                        </form>
+                        <form className="form-grid" onSubmit={handleProductSubcategorySubmit}>
+                            <label className="field">
+                                <span>Categoria da subcategoria</span>
+                                <select
+                                    value={productSubcategoryForm.categoryId}
+                                    onChange={(event) => updateProductSubcategoryFormField("categoryId", event.target.value)}
+                                    disabled={!canManage || !productCategories.length}
+                                    required
+                                >
+                                    <option value="">Selecione</option>
+                                    {productCategories.map((category) => (
+                                        <option key={category.id} value={category.id}>
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </label>
+                            <label className="field">
+                                <span>Nova subcategoria</span>
+                                <input
+                                    value={productSubcategoryForm.name}
+                                    onChange={(event) => updateProductSubcategoryFormField("name", event.target.value)}
+                                    placeholder="Ex: Tricot premium"
+                                    required
+                                    disabled={!canManage || !productCategories.length}
+                                />
+                            </label>
+                            <div className="form-actions field-full">
+                                <button
+                                    type="submit"
+                                    className="primary-button"
+                                    disabled={isSaving || !canManage || !productSubcategoryForm.categoryId}
+                                >
+                                    {isSaving ? "Salvando..." : "Cadastrar subcategoria"}
+                                </button>
+                                <button type="button" className="secondary-button" onClick={resetProductSubcategoryForm} disabled={!canManage}>
+                                    Limpar
+                                </button>
+                            </div>
+                        </form>
+                        <div className="admin-product-list">
+                            {productCategories.map((category) => (
+                                <article key={category.id} className="admin-product-card">
+                                    <div>
+                                        <strong>{category.name}</strong>
+                                        <p>
+                                            {category.subcategories.length
+                                                ? `${category.subcategories.length} subcategoria(s) cadastrada(s)`
+                                                : "Sem subcategorias cadastradas."}
+                                        </p>
+                                        {(category.subcategories || []).map((subcategory) => (
+                                            <div key={subcategory.id} className="admin-product-actions">
+                                                <span>{subcategory.name}</span>
+                                                <button
+                                                    type="button"
+                                                    className="text-button admin-delete-button"
+                                                    onClick={() => handleDeleteProductSubcategory(category, subcategory)}
+                                                    disabled={!canManage}
+                                                >
+                                                    Remover subcategoria
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="admin-product-actions">
+                                        <button
+                                            type="button"
+                                            className="text-button admin-delete-button"
+                                            onClick={() => handleDeleteProductCategory(category)}
+                                            disabled={!canManage}
+                                        >
+                                            Remover categoria
+                                        </button>
+                                    </div>
+                                </article>
+                            ))}
+                            {!productCategories.length ? <p>Nenhuma categoria cadastrada ainda.</p> : null}
+                        </div>
+                    </section>
                     <section className="contact-card">
                         <div className="section-heading">
                             <h2>Produtos cadastrados</h2>
@@ -1238,8 +1568,50 @@ export function AdminDashboard({
                                 description="Defina nome, categoria, descrição e os atributos visíveis no catálogo."
                             />
                             <label className="field"><span>Nome</span><input value={productForm.name} onChange={(event) => updateProductField("name", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Categoria</span><input value={productForm.category} onChange={(event) => updateProductField("category", event.target.value)} required disabled={!canManage} /></label>
-                            <label className="field"><span>Subcategoria</span><input value={productForm.subcategory} onChange={(event) => updateProductField("subcategory", event.target.value)} required disabled={!canManage} /></label>
+                            <label className="field">
+                                <span>Categoria</span>
+                                <select
+                                    value={productForm.category}
+                                    onChange={(event) => handleProductCategoryChange(event.target.value)}
+                                    required
+                                    disabled={!canManage || !categorySelectOptions.length}
+                                >
+                                    <option value="">Selecione</option>
+                                    {categorySelectOptions.map((category) => (
+                                        <option key={category} value={category}>
+                                            {category}
+                                        </option>
+                                    ))}
+                                </select>
+                                <small className="field-help">
+                                    {categoryOptions.length
+                                        ? "Selecione uma categoria já cadastrada na área acima."
+                                        : "Cadastre uma categoria na área acima para liberar a seleção aqui."}
+                                </small>
+                            </label>
+                            <label className="field">
+                                <span>Subcategoria</span>
+                                <select
+                                    value={productForm.subcategory}
+                                    onChange={(event) => updateProductField("subcategory", event.target.value)}
+                                    required
+                                    disabled={!canManage || !productForm.category || !subcategorySelectOptions.length}
+                                >
+                                    <option value="">Selecione</option>
+                                    {subcategorySelectOptions.map((subcategory) => (
+                                        <option key={subcategory} value={subcategory}>
+                                            {subcategory}
+                                        </option>
+                                    ))}
+                                </select>
+                                <small className="field-help">
+                                    {!productForm.category
+                                        ? "Selecione primeiro uma categoria."
+                                        : subcategoryOptions.length
+                                          ? "Selecione uma subcategoria já cadastrada para essa categoria."
+                                          : "Cadastre uma subcategoria na área acima para liberar a seleção aqui."}
+                                </small>
+                            </label>
                             <label className="field"><span>Tamanhos</span><input value={productForm.sizes} onChange={(event) => updateProductField("sizes", event.target.value)} placeholder="P, M, G" required disabled={!canManage} /></label>
                             <label className="field"><span>Cores</span><input value={productForm.colors} onChange={(event) => updateProductField("colors", event.target.value)} placeholder="Preto, Areia" required disabled={!canManage} /></label>
                             <label className="field field-full"><span>Descrição</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>

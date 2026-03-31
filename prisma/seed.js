@@ -5,6 +5,7 @@ const products = require("../data/products.json");
 const orders = require("../data/orders.json");
 const coupons = require("../data/coupons.json");
 const leads = require("../data/leads.json");
+const productCategories = require("../data/product-categories.json");
 
 async function main() {
     if (!process.env.DATABASE_URL) {
@@ -21,6 +22,8 @@ async function main() {
     });
 
     try {
+        await prisma.productSubcategory.deleteMany();
+        await prisma.productCategory.deleteMany();
         await prisma.product.deleteMany();
         await prisma.order.deleteMany();
         await prisma.coupon.deleteMany();
@@ -90,11 +93,25 @@ async function main() {
             });
         }
 
+        for (const category of productCategories) {
+            await prisma.productCategory.create({
+                data: {
+                    name: category.name,
+                    subcategories: {
+                        create: (category.subcategories || []).map((subcategory) => ({
+                            name: subcategory.name,
+                        })),
+                    },
+                },
+            });
+        }
+
         console.log("[PrismaSeed] Store data seeded successfully.", {
             products: products.length,
             orders: orders.length,
             coupons: coupons.length,
             leads: leads.length,
+            productCategories: productCategories.length,
         });
     } finally {
         await prisma.$disconnect();

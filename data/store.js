@@ -28,13 +28,13 @@ export const benefits = [
 
 export const heroSlides = [
     {
-        image: "/assets/hero_1.jpg",
+        image: "/assets/hero01.png",
         eyebrow: "Coleção FAV'S Drop",
         title: "Moda feminina com presença, leveza e sofisticação.",
         description: "Peças selecionadas para valorizar o caimento e destacar o seu estilo em qualquer ocasião.",
     },
     {
-        image: "/assets/hero_2.jpg",
+        image: "/assets/hero2.png",
         eyebrow: "Nova coleção",
         title: "Looks pensados para o dia a dia e para momentos especiais.",
         description: "Explore combinações elegantes com acabamento premium e identidade marcante.",

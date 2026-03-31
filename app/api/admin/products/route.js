@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { getAdminSession, getAdminUnauthorizedResponse } from "../../../../lib/admin-session";
+import { syncProductCategoryOption } from "../../../../lib/product-category-store";
 import { createProduct, deleteProduct, getAllProducts, updateProduct } from "../../../../lib/product-store";
 
 export async function GET() {
@@ -25,12 +26,14 @@ export async function POST(request) {
     try {
         const payload = await request.json();
         const product = await createProduct(payload);
+        const categories = await syncProductCategoryOption(product.category, product.subcategory);
         revalidatePath("/", "page");
         revalidatePath("/produtos", "page");
         console.log("[AdminProducts] Revalidated public product pages after create.", { productId: product.id });
         return NextResponse.json({
             ok: true,
             product,
+            categories,
         });
     } catch (error) {
         console.log("[AdminProducts] Failed to create product.", error);
@@ -53,12 +56,14 @@ export async function PATCH(request) {
     try {
         const payload = await request.json();
         const product = await updateProduct(payload.id, payload);
+        const categories = await syncProductCategoryOption(product.category, product.subcategory);
         revalidatePath("/", "page");
         revalidatePath("/produtos", "page");
         console.log("[AdminProducts] Revalidated public product pages after update.", { productId: product.id });
         return NextResponse.json({
             ok: true,
             product,
+            categories,
         });
     } catch (error) {
         console.log("[AdminProducts] Failed to update product.", error);

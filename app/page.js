@@ -63,8 +63,8 @@ export default async function HomePage() {
             <section className="section section-alt">
                 <div className="two-column">
                     <div className="content-card">
-                        <p className="section-kicker">Atendimento próximo</p>
-                        <h2>Fale com a equipe e receba ajuda para escolher o look ideal</h2>
+                        <p className="section-kicker">Atendimento Vip</p>
+                        <h2>Dúvidas?Fale com a nosssa equipe</h2>
                         <div className="highlight-list">
                             {contactHighlights.map((item) => (
                                 <div key={item} className="highlight-item">

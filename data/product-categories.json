@@ -1,0 +1,40 @@
+[
+  {
+    "id": 1,
+    "name": "Conjuntos",
+    "subcategories": [
+      {
+        "id": 1,
+        "name": "Alfaiataria leve"
+      },
+      {
+        "id": 2,
+        "name": "Linho premium"
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Macaquinhos",
+    "subcategories": [
+      {
+        "id": 3,
+        "name": "Casual chic"
+      },
+      {
+        "id": 4,
+        "name": "Resort wear"
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "Vestidos",
+    "subcategories": [
+      {
+        "id": 5,
+        "name": "Festa"
+      }
+    ]
+  }
+]

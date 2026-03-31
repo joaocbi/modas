@@ -1,0 +1,95 @@
+import { NextResponse } from "next/server";
+import { getAdminSession, getAdminUnauthorizedResponse } from "../../../../lib/admin-session";
+import {
+    createProductCategory,
+    createProductSubcategory,
+    deleteProductCategory,
+    deleteProductSubcategory,
+    getAllProductCategories,
+} from "../../../../lib/product-category-store";
+
+export async function GET() {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
+    const categories = await getAllProductCategories();
+    return NextResponse.json({
+        ok: true,
+        categories,
+    });
+}
+
+export async function POST(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
+    try {
+        const payload = await request.json();
+        const categories =
+            payload.type === "subcategory"
+                ? await createProductSubcategory(payload.categoryId, { name: payload.name })
+                : await createProductCategory({ name: payload.name });
+
+        return NextResponse.json({
+            ok: true,
+            categories,
+        });
+    } catch (error) {
+        console.log("[AdminProductCategories] Failed to create category data.", error);
+        return NextResponse.json(
+            {
+                ok: false,
+                message:
+                    error.message === "Category not found."
+                        ? "A categoria informada não foi encontrada."
+                        : error.message === "Category name is required."
+                          ? "Informe o nome da categoria."
+                          : error.message === "Subcategory name is required."
+                            ? "Informe o nome da subcategoria."
+                            : "Não foi possível salvar a categoria.",
+            },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
+    try {
+        const { searchParams } = new URL(request.url);
+        const categoryId = searchParams.get("categoryId");
+        const subcategoryId = searchParams.get("subcategoryId");
+        const categories = categoryId ? await deleteProductCategory(categoryId) : await deleteProductSubcategory(subcategoryId);
+
+        return NextResponse.json({
+            ok: true,
+            categories,
+        });
+    } catch (error) {
+        console.log("[AdminProductCategories] Failed to delete category data.", error);
+        return NextResponse.json(
+            {
+                ok: false,
+                message:
+                    error.message === "Category is in use by products."
+                        ? "Esta categoria já está em uso por produtos cadastrados."
+                        : error.message === "Subcategory is in use by products."
+                          ? "Esta subcategoria já está em uso por produtos cadastrados."
+                          : error.message === "Category not found."
+                            ? "A categoria informada não foi encontrada."
+                            : error.message === "Subcategory not found."
+                              ? "A subcategoria informada não foi encontrada."
+                              : "Não foi possível remover o cadastro.",
+            },
+            { status: 500 }
+        );
+    }
+}

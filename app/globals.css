@@ -580,7 +580,9 @@ img {
 .product-meta {
     margin: 0;
     color: var(--color-text-muted);
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    line-height: 1.65;
+    font-weight: 500;
 }
 
 .product-body h3 {
@@ -604,11 +606,21 @@ img {
 .product-description-panel strong {
     display: block;
     margin-bottom: 8px;
+    font-family: var(--font-brand), Georgia, serif;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-accent-strong);
 }
 
 .product-description-panel p {
     margin: 0;
-    color: var(--color-text-muted);
+    color: #5f5648;
+    font-family: var(--font-brand), Georgia, serif;
+    font-size: 1rem;
+    line-height: 1.75;
+    font-weight: 500;
+    letter-spacing: 0.01em;
 }
 
 .product-description-panel.is-visible {
