@@ -15,6 +15,8 @@ export const revalidate = 300;
 export default async function HomePage() {
     const products = await getAllProducts();
     const featuredProducts = products.filter((product) => product.featured);
+    const totalCategories = new Set(products.map((product) => String(product.category || "").trim()).filter(Boolean)).size;
+    const totalPaymentMethods = new Set(products.flatMap((product) => product.paymentMethods || [])).size;
 
     return (
         <main>
@@ -29,10 +31,37 @@ export default async function HomePage() {
 
             <HeroSlider />
 
+            <section className="section section-tight">
+                <div className="content-card home-intro-card">
+                    <div className="section-heading">
+                        <p className="section-kicker">Curadoria da loja</p>
+                        <h2>Moda feminina com vitrine viva, navegação simples e atendimento próximo.</h2>
+                        <p>
+                            Explore categorias em destaque, encontre as peças mais desejadas da coleção e finalize seu pedido com suporte rápido.
+                        </p>
+                    </div>
+                    <div className="home-intro-stats">
+                        <article className="highlight-item">
+                            <strong>{products.length}</strong>
+                            <span>produtos publicados</span>
+                        </article>
+                        <article className="highlight-item">
+                            <strong>{totalCategories}</strong>
+                            <span>categorias em navegação</span>
+                        </article>
+                        <article className="highlight-item">
+                            <strong>{totalPaymentMethods}</strong>
+                            <span>formas de pagamento exibidas</span>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
             <section className="section">
                 <div className="section-heading align-center">
                     <p className="section-kicker">Destaques da marca</p>
                     <h2>Seleção pensada para valorizar o seu estilo</h2>
+                    <p>Campanhas visuais para direcionar a cliente às coleções e novidades da estação.</p>
                 </div>
                 <div className="promo-grid">
                     {promotions.map((promotion) => (
@@ -51,6 +80,7 @@ export default async function HomePage() {
                 <div className="section-heading align-center">
                     <p className="section-kicker">Coleção Golden Hour</p>
                     <h2>Peças com visual leve, acabamento premium e caimento impecável</h2>
+                    <p>Selecionamos abaixo os itens que merecem mais destaque na vitrine e ajudam a acelerar a conversão.</p>
                 </div>
                 <ProductGrid items={featuredProducts} />
                 <div className="section-actions">
@@ -64,7 +94,7 @@ export default async function HomePage() {
                 <div className="two-column">
                     <div className="content-card">
                         <p className="section-kicker">Atendimento Vip</p>
-                        <h2>Dúvidas?Fale com a nosssa equipe</h2>
+                        <h2>Dúvidas? Fale com a nossa equipe</h2>
                         <div className="highlight-list">
                             {contactHighlights.map((item) => (
                                 <div key={item} className="highlight-item">

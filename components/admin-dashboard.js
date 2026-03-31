@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débito", "Boleto", "Mercado Pago"];
 const DEFAULT_PRODUCT_IMAGE = "/assets/product_1.jpg";
-const MAX_PRODUCT_IMAGES = 10;
+const MAX_PRODUCT_IMAGES = 12;
 const MAX_IMAGE_DIMENSION = 1400;
 const MAX_IMAGE_FILE_BYTES = 260 * 1024;
 const MAX_PRODUCT_REQUEST_BYTES = 4 * 1024 * 1024;
@@ -458,6 +458,15 @@ export function AdminDashboard({
     const totalRevenue = useMemo(() => orders.reduce((sum, order) => sum + Number(order.total || 0), 0), [orders]);
     const activeCoupons = useMemo(() => coupons.filter((coupon) => coupon.active).length, [coupons]);
     const openLeads = useMemo(() => leads.filter((lead) => lead.status === "new").length, [leads]);
+    const totalCategoryCount = useMemo(() => productCategories.length, [productCategories]);
+    const totalSubcategoryCount = useMemo(
+        () => productCategories.reduce((sum, category) => sum + (category.subcategories?.length || 0), 0),
+        [productCategories]
+    );
+    const categoriesWithImageCount = useMemo(
+        () => productCategories.filter((category) => String(category.image || "").trim()).length,
+        [productCategories]
+    );
 
     const orderStatusChart = useMemo(() => {
         const summary = orders.reduce((accumulator, order) => {
@@ -1415,6 +1424,20 @@ export function AdminDashboard({
                             <h2>Categorias e subcategorias</h2>
                             <p>Cadastre as opções uma vez e reaproveite depois no formulário de produto.</p>
                         </div>
+                        <div className="admin-inline-metrics">
+                            <article className="highlight-item">
+                                <strong>{totalCategoryCount}</strong>
+                                <span>categorias cadastradas</span>
+                            </article>
+                            <article className="highlight-item">
+                                <strong>{totalSubcategoryCount}</strong>
+                                <span>subcategorias ativas</span>
+                            </article>
+                            <article className="highlight-item">
+                                <strong>{categoriesWithImageCount}</strong>
+                                <span>categorias já publicadas no carrossel</span>
+                            </article>
+                        </div>
                         <form className="form-grid" onSubmit={handleProductCategorySubmit}>
                             <label className="field">
                                 <span>{productCategoryForm.id ? "Editar categoria" : "Nova categoria"}</span>
@@ -1590,6 +1613,20 @@ export function AdminDashboard({
                         <div className="section-heading">
                             <h2>Produtos cadastrados</h2>
                             <p>Cadastre, edite e remova produtos pelo modal de manutenção.</p>
+                        </div>
+                        <div className="admin-inline-metrics">
+                            <article className="highlight-item">
+                                <strong>{products.length}</strong>
+                                <span>produtos totais</span>
+                            </article>
+                            <article className="highlight-item">
+                                <strong>{filteredProducts.length}</strong>
+                                <span>produtos no filtro atual</span>
+                            </article>
+                            <article className="highlight-item">
+                                <strong>{totalFeatured}</strong>
+                                <span>produtos em destaque</span>
+                            </article>
                         </div>
                         <div className="section-actions admin-section-actions">
                             <button type="button" className="primary-button" onClick={openNewProductModal} disabled={!canManage}>

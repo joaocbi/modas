@@ -20,6 +20,10 @@ export function HeroSlider() {
         setActiveIndex((currentIndex) => (currentIndex + step + heroSlides.length) % heroSlides.length);
     }
 
+    function goToSlideIndex(nextIndex) {
+        setActiveIndex(nextIndex);
+    }
+
     return (
         <section className="hero-section">
             {heroSlides.map((slide, index) => (
@@ -55,6 +59,18 @@ export function HeroSlider() {
             <button type="button" className="slider-button slider-button-right" onClick={() => goToSlide(1)} aria-label="Próximo slide">
                 <ChevronRight size={20} />
             </button>
+
+            <div className="hero-dots" aria-label="Indicadores do slider">
+                {heroSlides.map((slide, index) => (
+                    <button
+                        key={slide.image}
+                        type="button"
+                        className={`hero-dot ${index === activeIndex ? "is-active" : ""}`}
+                        onClick={() => goToSlideIndex(index)}
+                        aria-label={`Ir para o slide ${index + 1}`}
+                    />
+                ))}
+            </div>
         </section>
     );
 }

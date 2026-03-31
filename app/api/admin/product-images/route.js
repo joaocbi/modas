@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getAdminSession, getAdminUnauthorizedResponse } from "../../../../lib/admin-session";
 import { canStoreProductImages, storeProductImage } from "../../../../lib/product-image-store";
 
-const MAX_FILES_PER_UPLOAD = 10;
+const MAX_FILES_PER_UPLOAD = 12;
 const MAX_SOURCE_FILE_SIZE = 4 * 1024 * 1024;
 
 export const runtime = "nodejs";

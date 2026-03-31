@@ -12,7 +12,7 @@ function formatCurrency(value) {
 
 function getProductImages(product) {
     const images = Array.isArray(product.images) && product.images.length ? product.images : [product.image].filter(Boolean);
-    return images.slice(0, 10);
+    return images.slice(0, 12);
 }
 
 function ProductCard({ product, showDescription }) {
@@ -145,6 +145,20 @@ function ProductCard({ product, showDescription }) {
 }
 
 export function ProductGrid({ items, showDescription = true }) {
+    if (!items.length) {
+        return (
+            <div className="empty-state">
+                <h1>Nenhum produto encontrado</h1>
+                <p>No momento não há itens disponíveis com esse filtro. Tente outra categoria ou fale com a equipe.</p>
+                <div className="section-actions">
+                    <a href="/contato" className="secondary-button">
+                        Falar com a equipe
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="product-grid">
             {items.map((product) => (
