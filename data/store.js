@@ -72,15 +72,6 @@ export const exchangeSections = [
         items: ["Troca pelo mesmo produto", "Crédito na loja", "Reembolso do valor pago"],
     },
     {
-        title: "Trocas por tamanho ou preferência",
-        description: "As solicitações podem ser feitas em até 7 dias corridos, com produto sem uso e com etiqueta original.",
-        items: [
-            "Produto sem sinais de uso",
-            "Etiqueta original afixada",
-            "Disponibilidade sujeita ao estoque",
-        ],
-    },
-    {
         title: "Condições que não permitem troca",
         description: "Não são aceitos produtos com sinais de uso, lavagem, odor ou danos por mau uso.",
         items: ["Sem etiqueta original", "Danificados pelo uso", "Itens promocionais sem defeito de fabricação"],
