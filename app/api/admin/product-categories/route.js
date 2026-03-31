@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getAdminSession, getAdminUnauthorizedResponse } from "../../../../lib/admin-session";
 import {
     createProductCategory,
@@ -6,6 +7,7 @@ import {
     deleteProductCategory,
     deleteProductSubcategory,
     getAllProductCategories,
+    updateProductCategory,
 } from "../../../../lib/product-category-store";
 
 export async function GET() {
@@ -32,7 +34,11 @@ export async function POST(request) {
         const categories =
             payload.type === "subcategory"
                 ? await createProductSubcategory(payload.categoryId, { name: payload.name })
-                : await createProductCategory({ name: payload.name });
+                : await createProductCategory({ name: payload.name, image: payload.image });
+
+        revalidatePath("/", "layout");
+        revalidatePath("/", "page");
+        revalidatePath("/produtos", "page");
 
         return NextResponse.json({
             ok: true,
@@ -57,6 +63,42 @@ export async function POST(request) {
     }
 }
 
+export async function PATCH(request) {
+    const session = await getAdminSession();
+    if (!session) {
+        return getAdminUnauthorizedResponse();
+    }
+
+    try {
+        const payload = await request.json();
+        const categories = await updateProductCategory(payload.categoryId, {
+            categoryName: payload.categoryName,
+            image: payload.image,
+        });
+
+        revalidatePath("/", "layout");
+        revalidatePath("/", "page");
+        revalidatePath("/produtos", "page");
+
+        return NextResponse.json({
+            ok: true,
+            categories,
+        });
+    } catch (error) {
+        console.log("[AdminProductCategories] Failed to update category data.", error);
+        return NextResponse.json(
+            {
+                ok: false,
+                message:
+                    error.message === "Category not found."
+                        ? "A categoria informada não foi encontrada."
+                        : "Não foi possível atualizar a categoria.",
+            },
+            { status: 500 }
+        );
+    }
+}
+
 export async function DELETE(request) {
     const session = await getAdminSession();
     if (!session) {
@@ -68,6 +110,10 @@ export async function DELETE(request) {
         const categoryId = searchParams.get("categoryId");
         const subcategoryId = searchParams.get("subcategoryId");
         const categories = categoryId ? await deleteProductCategory(categoryId) : await deleteProductSubcategory(subcategoryId);
+
+        revalidatePath("/", "layout");
+        revalidatePath("/", "page");
+        revalidatePath("/produtos", "page");
 
         return NextResponse.json({
             ok: true,

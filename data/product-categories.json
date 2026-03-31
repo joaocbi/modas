@@ -2,6 +2,7 @@
   {
     "id": 1,
     "name": "Conjuntos",
+    "image": "",
     "subcategories": [
       {
         "id": 1,
@@ -16,6 +17,7 @@
   {
     "id": 2,
     "name": "Macaquinhos",
+    "image": "",
     "subcategories": [
       {
         "id": 3,
@@ -30,6 +32,7 @@
   {
     "id": 3,
     "name": "Vestidos",
+    "image": "",
     "subcategories": [
       {
         "id": 5,

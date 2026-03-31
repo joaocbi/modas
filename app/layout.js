@@ -1,6 +1,7 @@
 import { Montserrat, Playfair_Display } from "next/font/google";
 import { SiteChrome } from "../components/site-chrome";
 import { store } from "../data/store";
+import { getAllProductCategories } from "../lib/product-category-store";
 import "./globals.css";
 
 const montserrat = Montserrat({
@@ -25,13 +26,19 @@ export const metadata = {
     manifest: "/manifest.webmanifest",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
     const whatsappHref = `https://wa.me/${store.whatsapp}?text=Olá, quero atendimento da DeVille Fashion.`;
+    const productCategories = await getAllProductCategories();
 
     return (
         <html lang="pt-BR">
             <body className={`${montserrat.className} ${playfairDisplay.variable}`}>
-                <SiteChrome whatsappHref={whatsappHref}>{children}</SiteChrome>
+                <SiteChrome
+                    whatsappHref={whatsappHref}
+                    initialCategoryCarouselItems={productCategories.filter((category) => String(category.image || "").trim())}
+                >
+                    {children}
+                </SiteChrome>
             </body>
         </html>
     );

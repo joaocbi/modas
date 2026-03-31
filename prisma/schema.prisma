@@ -33,6 +33,7 @@ model Product {
 model ProductCategory {
   id            Int                  @id @default(autoincrement())
   name          String               @unique
+  image         String               @default("")
   subcategories ProductSubcategory[]
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt

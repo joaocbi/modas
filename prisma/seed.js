@@ -97,6 +97,7 @@ async function main() {
             await prisma.productCategory.create({
                 data: {
                     name: category.name,
+                    image: category.image || "",
                     subcategories: {
                         create: (category.subcategories || []).map((subcategory) => ({
                             name: subcategory.name,

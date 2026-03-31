@@ -310,6 +310,7 @@ function getEmptyCouponForm() {
 function getEmptyProductCategoryForm() {
     return {
         name: "",
+        image: "",
     };
 }
 
@@ -318,6 +319,13 @@ function getEmptyProductSubcategoryForm(categories = []) {
         categoryId: String(categories[0]?.id || ""),
         name: "",
     };
+}
+
+function buildCategoryImageDrafts(categories = []) {
+    return categories.reduce((drafts, category) => {
+        drafts[category.id] = String(category.image || "");
+        return drafts;
+    }, {});
 }
 
 function formatCurrency(value) {
@@ -432,9 +440,11 @@ export function AdminDashboard({
     const [statusType, setStatusType] = useState("success");
     const [isSaving, setIsSaving] = useState(false);
     const [isUploadingImages, setIsUploadingImages] = useState(false);
+    const [isUploadingCategoryImage, setIsUploadingCategoryImage] = useState(false);
     const [imagePreview, setImagePreview] = useState("/assets/product_1.jpg");
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [zoomedImage, setZoomedImage] = useState("");
+    const [categoryImageDrafts, setCategoryImageDrafts] = useState(buildCategoryImageDrafts(initialProductCategories));
     const estimatedProfit = useMemo(() => calculateEstimatedProfit(productForm.price, productForm.totalCost), [productForm.price, productForm.totalCost]);
     const estimatedMarginPercentage = useMemo(
         () => calculateMarginPercentage(productForm.price, productForm.totalCost),
@@ -584,6 +594,85 @@ export function AdminDashboard({
 
     function updateProductSubcategoryFormField(name, value) {
         setProductSubcategoryForm((current) => ({ ...current, [name]: value }));
+    }
+
+    function updateCategoryImageDraft(categoryId, value) {
+        setCategoryImageDrafts((current) => ({
+            ...current,
+            [categoryId]: value,
+        }));
+    }
+
+    async function uploadSingleAdminImage(file) {
+        const optimizedFile = await optimizeImageFile(file);
+
+        if (canUploadProductImages) {
+            const { response, data } = await uploadProductImages([optimizedFile]);
+
+            if (!response.ok) {
+                throw new Error(data.message || "Nao foi possivel enviar a imagem.");
+            }
+
+            return String(data.images?.[0] || "");
+        }
+
+        return readFileAsDataUrl(optimizedFile);
+    }
+
+    async function handleProductCategoryImageUpload(event) {
+        const file = event.target.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        try {
+            setIsUploadingCategoryImage(true);
+            showStatus("success", "Otimizando e enviando imagem da categoria...");
+            const uploadedImage = await uploadSingleAdminImage(file);
+
+            if (!uploadedImage) {
+                showStatus("warning", "Nao foi possivel carregar a imagem da categoria.");
+                return;
+            }
+
+            updateProductCategoryFormField("image", uploadedImage);
+            showStatus("success", "Imagem da categoria carregada com sucesso.");
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to upload category image.", error);
+            showStatus("warning", "Nao foi possivel carregar a imagem da categoria.");
+        } finally {
+            setIsUploadingCategoryImage(false);
+            event.target.value = "";
+        }
+    }
+
+    async function handleCategoryDraftImageUpload(categoryId, event) {
+        const file = event.target.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        try {
+            setIsUploadingCategoryImage(true);
+            showStatus("success", "Otimizando e enviando imagem da categoria...");
+            const uploadedImage = await uploadSingleAdminImage(file);
+
+            if (!uploadedImage) {
+                showStatus("warning", "Nao foi possivel carregar a imagem da categoria.");
+                return;
+            }
+
+            updateCategoryImageDraft(categoryId, uploadedImage);
+            showStatus("success", "Imagem da categoria carregada com sucesso.");
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to upload category draft image.", error);
+            showStatus("warning", "Nao foi possivel carregar a imagem da categoria.");
+        } finally {
+            setIsUploadingCategoryImage(false);
+            event.target.value = "";
+        }
     }
 
     function updateProductField(name, value) {
@@ -924,6 +1013,7 @@ export function AdminDashboard({
             const { response, data } = await sendAdminRequest("/api/admin/product-categories", "POST", {
                 type: "category",
                 name: productCategoryForm.name,
+                image: productCategoryForm.image,
             });
 
             if (!response.ok) {
@@ -969,6 +1059,32 @@ export function AdminDashboard({
         } catch (error) {
             console.log("[AdminDashboard] Failed to save product subcategory.", error);
             showStatus("warning", "Ocorreu um erro ao salvar a subcategoria.");
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    async function handleSaveCategoryImage(category) {
+        setIsSaving(true);
+        setStatusMessage("");
+
+        try {
+            const { response, data } = await sendAdminRequest("/api/admin/product-categories", "PATCH", {
+                categoryId: Number(category.id),
+                categoryName: category.name,
+                image: categoryImageDrafts[category.id] || "",
+            });
+
+            if (!response.ok) {
+                showStatus("warning", data.message || "Nao foi possivel atualizar a imagem da categoria.");
+                return;
+            }
+
+            setProductCategories(data.categories || []);
+            showStatus("success", "Imagem da categoria atualizada com sucesso.");
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to update product category image.", error);
+            showStatus("warning", "Ocorreu um erro ao atualizar a imagem da categoria.");
         } finally {
             setIsSaving(false);
         }
@@ -1054,6 +1170,10 @@ export function AdminDashboard({
                 categoryId: String(productCategories[0]?.id || ""),
             };
         });
+    }, [productCategories]);
+
+    useEffect(() => {
+        setCategoryImageDrafts(buildCategoryImageDrafts(productCategories));
     }, [productCategories]);
 
     async function handleOrderSubmit(event) {
@@ -1281,7 +1401,23 @@ export function AdminDashboard({
                                     disabled={!canManage}
                                 />
                             </label>
-                            <div className="form-actions">
+                            <label className="field">
+                                <span>Imagem da categoria</span>
+                                <input
+                                    value={productCategoryForm.image}
+                                    onChange={(event) => updateProductCategoryFormField("image", event.target.value)}
+                                    placeholder="/assets/categoria.png"
+                                    required
+                                    disabled={!canManage}
+                                />
+                                <small className="field-help">Essa imagem será exibida automaticamente no carrossel abaixo do menu.</small>
+                            </label>
+                            <label className="field">
+                                <span>Upload da imagem</span>
+                                <input type="file" accept="image/*" onChange={handleProductCategoryImageUpload} disabled={!canManage || isUploadingCategoryImage} />
+                                <small className="field-help">{isUploadingCategoryImage ? "Enviando imagem..." : "Envie uma imagem para preencher o campo automaticamente."}</small>
+                            </label>
+                            <div className="form-actions field-full">
                                 <button type="submit" className="primary-button" disabled={isSaving || !canManage}>
                                     {isSaving ? "Salvando..." : "Cadastrar categoria"}
                                 </button>
@@ -1335,6 +1471,46 @@ export function AdminDashboard({
                                 <article key={category.id} className="admin-product-card">
                                     <div>
                                         <strong>{category.name}</strong>
+                                        <p>
+                                            {category.image
+                                                ? "Publicada automaticamente no carrossel."
+                                                : "Cadastre uma imagem para publicar no carrossel."}
+                                        </p>
+                                        {categoryImageDrafts[category.id] ? (
+                                            <img
+                                                src={categoryImageDrafts[category.id]}
+                                                alt={`Imagem da categoria ${category.name}`}
+                                                className="admin-category-preview"
+                                            />
+                                        ) : null}
+                                        <label className="field field-full">
+                                            <span>Imagem da categoria</span>
+                                            <input
+                                                value={categoryImageDrafts[category.id] || ""}
+                                                onChange={(event) => updateCategoryImageDraft(category.id, event.target.value)}
+                                                placeholder="/assets/categoria.png"
+                                                disabled={!canManage}
+                                            />
+                                        </label>
+                                        <label className="field field-full">
+                                            <span>Upload da imagem</span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(event) => handleCategoryDraftImageUpload(category.id, event)}
+                                                disabled={!canManage || isUploadingCategoryImage}
+                                            />
+                                        </label>
+                                        <div className="admin-product-actions">
+                                            <button
+                                                type="button"
+                                                className="text-button"
+                                                onClick={() => handleSaveCategoryImage(category)}
+                                                disabled={!canManage || isSaving}
+                                            >
+                                                Salvar imagem
+                                            </button>
+                                        </div>
                                         <p>
                                             {category.subcategories.length
                                                 ? `${category.subcategories.length} subcategoria(s) cadastrada(s)`
