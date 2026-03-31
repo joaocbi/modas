@@ -8,6 +8,7 @@ import {
     deleteProductSubcategory,
     getAllProductCategories,
     updateProductCategory,
+    updateProductSubcategory,
 } from "../../../../lib/product-category-store";
 
 export async function GET() {
@@ -71,10 +72,16 @@ export async function PATCH(request) {
 
     try {
         const payload = await request.json();
-        const categories = await updateProductCategory(payload.categoryId, {
-            categoryName: payload.categoryName,
-            image: payload.image,
-        });
+        const categories =
+            payload.type === "subcategory"
+                ? await updateProductSubcategory(payload.subcategoryId, {
+                      categoryId: payload.categoryId,
+                      name: payload.name,
+                  })
+                : await updateProductCategory(payload.categoryId, {
+                      categoryName: payload.categoryName,
+                      image: payload.image,
+                  });
 
         revalidatePath("/", "layout");
         revalidatePath("/", "page");
@@ -92,6 +99,12 @@ export async function PATCH(request) {
                 message:
                     error.message === "Category not found."
                         ? "A categoria informada não foi encontrada."
+                        : error.message === "Subcategory not found."
+                          ? "A subcategoria informada não foi encontrada."
+                          : error.message === "Category name already exists."
+                            ? "Já existe uma categoria com esse nome."
+                            : error.message === "Subcategory name already exists."
+                              ? "Já existe uma subcategoria com esse nome nessa categoria."
                         : "Não foi possível atualizar a categoria.",
             },
             { status: 500 }

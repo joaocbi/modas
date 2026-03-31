@@ -2,16 +2,41 @@
 
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const SCROLL_OFFSET = 320;
+const AUTO_SCROLL_INTERVAL_MS = 3500;
 
 export function CategoryCarousel({ items }) {
     const trackRef = useRef(null);
+    const [isAutoScrollPaused, setIsAutoScrollPaused] = useState(false);
 
     if (!items.length) {
         return null;
     }
+
+    useEffect(() => {
+        if (isAutoScrollPaused || items.length <= 1) {
+            return undefined;
+        }
+
+        const intervalId = window.setInterval(() => {
+            const track = trackRef.current;
+
+            if (!track) {
+                return;
+            }
+
+            const reachedEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 8;
+
+            track.scrollTo({
+                left: reachedEnd ? 0 : track.scrollLeft + SCROLL_OFFSET,
+                behavior: "smooth",
+            });
+        }, AUTO_SCROLL_INTERVAL_MS);
+
+        return () => window.clearInterval(intervalId);
+    }, [isAutoScrollPaused, items.length]);
 
     function scrollTrack(direction) {
         trackRef.current?.scrollBy({
@@ -37,7 +62,14 @@ export function CategoryCarousel({ items }) {
                 </div>
             </div>
 
-            <div ref={trackRef} className="category-carousel-track">
+            <div
+                ref={trackRef}
+                className="category-carousel-track"
+                onMouseEnter={() => setIsAutoScrollPaused(true)}
+                onMouseLeave={() => setIsAutoScrollPaused(false)}
+                onFocus={() => setIsAutoScrollPaused(true)}
+                onBlur={() => setIsAutoScrollPaused(false)}
+            >
                 {items.map((category) => (
                     <Link
                         key={category.id}

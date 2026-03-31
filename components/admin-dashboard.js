@@ -309,6 +309,7 @@ function getEmptyCouponForm() {
 
 function getEmptyProductCategoryForm() {
     return {
+        id: "",
         name: "",
         image: "",
     };
@@ -316,6 +317,7 @@ function getEmptyProductCategoryForm() {
 
 function getEmptyProductSubcategoryForm(categories = []) {
     return {
+        id: "",
         categoryId: String(categories[0]?.id || ""),
         name: "",
     };
@@ -594,6 +596,24 @@ export function AdminDashboard({
 
     function updateProductSubcategoryFormField(name, value) {
         setProductSubcategoryForm((current) => ({ ...current, [name]: value }));
+    }
+
+    function startEditingProductCategory(category) {
+        setProductCategoryForm({
+            id: String(category.id),
+            name: category.name,
+            image: category.image || "",
+        });
+        showStatus("success", `Editando categoria ${category.name}.`);
+    }
+
+    function startEditingProductSubcategory(category, subcategory) {
+        setProductSubcategoryForm({
+            id: String(subcategory.id),
+            categoryId: String(category.id),
+            name: subcategory.name,
+        });
+        showStatus("success", `Editando subcategoria ${subcategory.name}.`);
     }
 
     function updateCategoryImageDraft(categoryId, value) {
@@ -1010,8 +1030,11 @@ export function AdminDashboard({
         setStatusMessage("");
 
         try {
-            const { response, data } = await sendAdminRequest("/api/admin/product-categories", "POST", {
+            const isEditing = Boolean(productCategoryForm.id);
+            const { response, data } = await sendAdminRequest("/api/admin/product-categories", isEditing ? "PATCH" : "POST", {
                 type: "category",
+                categoryId: Number(productCategoryForm.id),
+                categoryName: productCategoryForm.name,
                 name: productCategoryForm.name,
                 image: productCategoryForm.image,
             });
@@ -1023,7 +1046,7 @@ export function AdminDashboard({
 
             setProductCategories(data.categories || []);
             resetProductCategoryForm();
-            showStatus("success", "Categoria cadastrada com sucesso.");
+            showStatus("success", isEditing ? "Categoria atualizada com sucesso." : "Categoria cadastrada com sucesso.");
         } catch (error) {
             console.log("[AdminDashboard] Failed to save product category.", error);
             showStatus("warning", "Ocorreu um erro ao salvar a categoria.");
@@ -1041,8 +1064,10 @@ export function AdminDashboard({
             const selectedCategory = productCategories.find(
                 (category) => String(category.id) === String(productSubcategoryForm.categoryId)
             );
-            const { response, data } = await sendAdminRequest("/api/admin/product-categories", "POST", {
+            const isEditing = Boolean(productSubcategoryForm.id);
+            const { response, data } = await sendAdminRequest("/api/admin/product-categories", isEditing ? "PATCH" : "POST", {
                 type: "subcategory",
+                subcategoryId: Number(productSubcategoryForm.id),
                 categoryId: Number(productSubcategoryForm.categoryId),
                 categoryName: selectedCategory?.name || "",
                 name: productSubcategoryForm.name,
@@ -1055,7 +1080,7 @@ export function AdminDashboard({
 
             setProductCategories(data.categories || []);
             resetProductSubcategoryForm();
-            showStatus("success", "Subcategoria cadastrada com sucesso.");
+            showStatus("success", isEditing ? "Subcategoria atualizada com sucesso." : "Subcategoria cadastrada com sucesso.");
         } catch (error) {
             console.log("[AdminDashboard] Failed to save product subcategory.", error);
             showStatus("warning", "Ocorreu um erro ao salvar a subcategoria.");
@@ -1392,7 +1417,7 @@ export function AdminDashboard({
                         </div>
                         <form className="form-grid" onSubmit={handleProductCategorySubmit}>
                             <label className="field">
-                                <span>Nova categoria</span>
+                                <span>{productCategoryForm.id ? "Editar categoria" : "Nova categoria"}</span>
                                 <input
                                     value={productCategoryForm.name}
                                     onChange={(event) => updateProductCategoryFormField("name", event.target.value)}
@@ -1419,7 +1444,7 @@ export function AdminDashboard({
                             </label>
                             <div className="form-actions field-full">
                                 <button type="submit" className="primary-button" disabled={isSaving || !canManage}>
-                                    {isSaving ? "Salvando..." : "Cadastrar categoria"}
+                                    {isSaving ? "Salvando..." : productCategoryForm.id ? "Atualizar categoria" : "Cadastrar categoria"}
                                 </button>
                                 <button type="button" className="secondary-button" onClick={resetProductCategoryForm} disabled={!canManage}>
                                     Limpar
@@ -1432,7 +1457,7 @@ export function AdminDashboard({
                                 <select
                                     value={productSubcategoryForm.categoryId}
                                     onChange={(event) => updateProductSubcategoryFormField("categoryId", event.target.value)}
-                                    disabled={!canManage || !productCategories.length}
+                                    disabled={!canManage || !productCategories.length || Boolean(productSubcategoryForm.id)}
                                     required
                                 >
                                     <option value="">Selecione</option>
@@ -1444,7 +1469,7 @@ export function AdminDashboard({
                                 </select>
                             </label>
                             <label className="field">
-                                <span>Nova subcategoria</span>
+                                <span>{productSubcategoryForm.id ? "Editar subcategoria" : "Nova subcategoria"}</span>
                                 <input
                                     value={productSubcategoryForm.name}
                                     onChange={(event) => updateProductSubcategoryFormField("name", event.target.value)}
@@ -1459,7 +1484,7 @@ export function AdminDashboard({
                                     className="primary-button"
                                     disabled={isSaving || !canManage || !productSubcategoryForm.categoryId}
                                 >
-                                    {isSaving ? "Salvando..." : "Cadastrar subcategoria"}
+                                    {isSaving ? "Salvando..." : productSubcategoryForm.id ? "Atualizar subcategoria" : "Cadastrar subcategoria"}
                                 </button>
                                 <button type="button" className="secondary-button" onClick={resetProductSubcategoryForm} disabled={!canManage}>
                                     Limpar
@@ -1505,6 +1530,14 @@ export function AdminDashboard({
                                             <button
                                                 type="button"
                                                 className="text-button"
+                                                onClick={() => startEditingProductCategory(category)}
+                                                disabled={!canManage}
+                                            >
+                                                Editar categoria
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="text-button"
                                                 onClick={() => handleSaveCategoryImage(category)}
                                                 disabled={!canManage || isSaving}
                                             >
@@ -1519,6 +1552,14 @@ export function AdminDashboard({
                                         {(category.subcategories || []).map((subcategory) => (
                                             <div key={subcategory.id} className="admin-product-actions">
                                                 <span>{subcategory.name}</span>
+                                                <button
+                                                    type="button"
+                                                    className="text-button"
+                                                    onClick={() => startEditingProductSubcategory(category, subcategory)}
+                                                    disabled={!canManage}
+                                                >
+                                                    Editar subcategoria
+                                                </button>
                                                 <button
                                                     type="button"
                                                     className="text-button admin-delete-button"
