@@ -114,7 +114,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
         <>
             <article ref={cardRef} className="product-card" onBlur={handleCardBlur}>
                 <div className="product-gallery" onMouseLeave={handleGalleryMouseLeave}>
-                    <div className={`product-gallery-stage ${isOverlayDescription && isDescriptionVisible ? "has-description-card" : ""}`}>
+                    <div className={`product-gallery-stage ${isOverlayDescription ? "is-overlay-mode" : ""} ${isOverlayDescription && isDescriptionVisible ? "has-description-card" : ""}`}>
                         <button
                             type="button"
                             className="product-image-button"
@@ -128,8 +128,8 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                             </div>
                         </button>
 
-                        {showDescription && isOverlayDescription && isDescriptionVisible ? (
-                            <aside className="product-description-side-card">
+                        {showDescription && isOverlayDescription ? (
+                            <aside className={`product-description-side-card ${isDescriptionVisible ? "is-visible" : ""}`} aria-hidden={!isDescriptionVisible}>
                                 <strong>Descrição do produto</strong>
                                 <p>{product.description}</p>
                             </aside>
