@@ -7,14 +7,42 @@ const coupons = require("../data/coupons.json");
 const leads = require("../data/leads.json");
 const productCategories = require("../data/product-categories.json");
 
+function normalizeDatabaseUrl(value) {
+    if (!value) {
+        return null;
+    }
+
+    try {
+        const normalizedUrl = new URL(value);
+        const sslMode = String(normalizedUrl.searchParams.get("sslmode") || "").toLowerCase();
+
+        if (["prefer", "require", "verify-ca"].includes(sslMode)) {
+            normalizedUrl.searchParams.set("sslmode", "verify-full");
+            console.log("[PrismaSeed] Normalized DATABASE_URL sslmode.", {
+                previousSslMode: sslMode,
+                nextSslMode: "verify-full",
+            });
+        }
+
+        return normalizedUrl.toString();
+    } catch (error) {
+        console.warn("[PrismaSeed] Failed to normalize DATABASE_URL. Using original value.", {
+            errorMessage: error instanceof Error ? error.message : String(error),
+        });
+        return value;
+    }
+}
+
 async function main() {
-    if (!process.env.DATABASE_URL) {
+    const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL);
+
+    if (!databaseUrl) {
         console.log("[PrismaSeed] DATABASE_URL is not configured. Skipping seed.");
         return;
     }
 
     const pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
+        connectionString: databaseUrl,
     });
     const adapter = new PrismaPg(pool);
     const prisma = new PrismaClient({

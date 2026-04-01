@@ -1356,7 +1356,7 @@ export function AdminDashboard({
 
             <div className="admin-storage-banner">
                 <strong>Modo de armazenamento:</strong> {storageMode === "database" ? "PostgreSQL com Prisma" : "Fallback local em arquivo"}
-                {!canManage ? " â€¢ leitura apenas ate configurar DATABASE_URL" : ""}
+                {!canManage ? " - leitura apenas ate configurar DATABASE_URL" : ""}
             </div>
 
             <div className="admin-metrics">
@@ -1695,9 +1695,9 @@ export function AdminDashboard({
                             {filteredOrders.map((order) => (
                                 <article key={order.id} className="admin-product-card">
                                     <div>
-                                        <strong>Pedido #{order.id} â€¢ {order.customer}</strong>
-                                        <p>{order.status} â€¢ {order.channel}</p>
-                                        <span>{order.itemCount} item(ns) â€¢ {formatCurrency(order.total)}</span>
+                                        <strong>Pedido #{order.id} - {order.customer}</strong>
+                                        <p>{order.status} - {order.channel}</p>
+                                        <span>{order.itemCount} item(ns) - {formatCurrency(order.total)}</span>
                                     </div>
                                     <div className="admin-product-actions">
                                         <button type="button" className="text-button" onClick={() => startEditingOrder(order)} disabled={!canManage}>Editar</button>
@@ -1741,8 +1741,8 @@ export function AdminDashboard({
                                 <article key={coupon.id} className="admin-product-card">
                                     <div>
                                         <strong>{coupon.code}</strong>
-                                        <p>{coupon.type} â€¢ {coupon.active ? "ativo" : "inativo"}</p>
-                                        <span>Valor {coupon.value} â€¢ minimo {coupon.minOrder} â€¢ uso {coupon.usageCount}</span>
+                                        <p>{coupon.type} - {coupon.active ? "ativo" : "inativo"}</p>
+                                        <span>Valor {coupon.value} - minimo {coupon.minOrder} - uso {coupon.usageCount}</span>
                                     </div>
                                     <div className="admin-product-actions">
                                         <button type="button" className="text-button" onClick={() => startEditingCoupon(coupon)} disabled={!canManage}>Editar</button>
@@ -1768,9 +1768,9 @@ export function AdminDashboard({
                                     <div>
                                         <strong>{lead.name}</strong>
                                         <p>{lead.subject}</p>
-                                        <span>{lead.email || "sem email"} â€¢ {lead.phone || "sem telefone"}</span>
+                                        <span>{lead.email || "sem email"} - {lead.phone || "sem telefone"}</span>
                                         <p>{lead.message}</p>
-                                        <span>{lead.channel} â€¢ {lead.status}</span>
+                                        <span>{lead.channel} - {lead.status}</span>
                                     </div>
                                     <div className="admin-product-actions">
                                         <button type="button" className="text-button" onClick={() => updateLeadStatus(lead, "contacted")} disabled={!canManage}>Marcar contato</button>
