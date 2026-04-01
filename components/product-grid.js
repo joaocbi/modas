@@ -86,13 +86,13 @@ function ProductCard({ product, showDescription, descriptionMode }) {
         setZoomOrigin(`${x}% ${y}%`);
     }
 
-    function handleGalleryMouseLeave() {
+    function handleExpandedPreviewMouseLeave() {
         if (!isOverlayDescription || !isDescriptionVisible) {
             return;
         }
 
         setIsDescriptionVisible(false);
-        console.log("[ProductGrid] Product description hidden after leaving gallery area.", {
+        console.log("[ProductGrid] Expanded product preview hidden after mouse leave.", {
             productId: product.id,
             productName: product.name,
         });
@@ -113,8 +113,8 @@ function ProductCard({ product, showDescription, descriptionMode }) {
     return (
         <>
             <article ref={cardRef} className="product-card" onBlur={handleCardBlur}>
-                <div className="product-gallery" onMouseLeave={handleGalleryMouseLeave}>
-                    <div className={`product-gallery-stage ${isOverlayDescription ? "is-overlay-mode" : ""}`}>
+                <div className="product-gallery">
+                    <div className="product-gallery-stage">
                         <button
                             type="button"
                             className="product-image-button"
@@ -155,18 +155,6 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                             </p>
                         </div>
                     ) : null}
-
-                    {showDescription && isOverlayDescription ? (
-                        <div className={`product-expanded-preview ${isDescriptionVisible ? "is-visible" : ""}`} aria-hidden={!isDescriptionVisible}>
-                            <div className="product-expanded-image-wrap">
-                                <img src={activeImage} alt={`Prévia ampliada de ${product.name}`} className="product-expanded-image" />
-                            </div>
-                            <aside className="product-description-side-card">
-                                <strong>Descrição do produto</strong>
-                                <p>{product.description}</p>
-                            </aside>
-                        </div>
-                    ) : null}
                 </div>
 
                 <div className="product-body">
@@ -199,6 +187,27 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                     </div>
                 </div>
             </article>
+
+            {showDescription && isOverlayDescription && isDescriptionVisible ? (
+                <div className="product-expanded-preview-backdrop" role="presentation" onClick={() => setIsDescriptionVisible(false)}>
+                    <div
+                        className="product-expanded-preview-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={`Prévia ampliada de ${product.name}`}
+                        onClick={(event) => event.stopPropagation()}
+                        onMouseLeave={handleExpandedPreviewMouseLeave}
+                    >
+                        <div className="product-expanded-image-wrap">
+                            <img src={activeImage} alt={`Prévia ampliada de ${product.name}`} className="product-expanded-image" />
+                        </div>
+                        <aside className="product-description-side-card is-visible">
+                            <strong>Descrição do produto</strong>
+                            <p>{product.description}</p>
+                        </aside>
+                    </div>
+                </div>
+            ) : null}
 
             {isLightboxOpen ? (
                 <div className="product-lightbox-backdrop" role="presentation" onClick={closeImageLightbox}>
