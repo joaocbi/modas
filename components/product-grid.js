@@ -130,8 +130,8 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                         <div className="product-image-wrap">
                             <img src={activeImage} alt={product.name} className="product-image" />
                             <span className="product-badge">{product.badge}</span>
-                            {showDescription && isOverlayDescription && isDescriptionVisible ? (
-                                <div className="product-description-overlay">
+                            {showDescription && isOverlayDescription ? (
+                                <div className={`product-description-overlay ${isDescriptionVisible ? "is-visible" : ""}`}>
                                     <strong>Descrição do produto</strong>
                                     <p>{product.description}</p>
                                 </div>
