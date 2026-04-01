@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getProductWhatsAppLink } from "../data/store";
-import { buildProductPath } from "../lib/product-utils";
 
 function formatCurrency(value) {
     return new Intl.NumberFormat("pt-BR", {
@@ -25,7 +23,6 @@ function ProductCard({ product, showDescription, descriptionMode }) {
     const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
     const cardRef = useRef(null);
     const isOverlayDescription = descriptionMode === "overlay";
-    const productDescription = String(product.description || "").trim() || "Clique para visualizar os detalhes deste produto.";
 
     useEffect(() => {
         if (!isOverlayDescription || !isDescriptionVisible) {
@@ -121,12 +118,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
 
     return (
         <>
-            <article
-                ref={cardRef}
-                className={`product-card ${isOverlayDescription ? "product-card-overlay-mode" : ""} ${isDescriptionVisible ? "product-card-description-active" : ""}`}
-                onMouseLeave={handleCardMouseLeave}
-                onBlur={handleCardBlur}
-            >
+            <article ref={cardRef} className="product-card" onMouseLeave={handleCardMouseLeave} onBlur={handleCardBlur}>
                 <div className="product-gallery">
                     <button
                         type="button"
@@ -138,11 +130,10 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                         <div className="product-image-wrap">
                             <img src={activeImage} alt={product.name} className="product-image" />
                             <span className="product-badge">{product.badge}</span>
-                            {showDescription && isOverlayDescription ? <span className="product-description-hint">Clique para ver a descrição</span> : null}
                             {showDescription && isOverlayDescription ? (
                                 <div className={`product-description-overlay ${isDescriptionVisible ? "is-visible" : ""}`}>
                                     <strong>Descrição do produto</strong>
-                                    <p>{productDescription}</p>
+                                    <p>{product.description}</p>
                                 </div>
                             ) : null}
                         </div>
@@ -169,7 +160,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                             <strong>Descrição do produto</strong>
                             <p>
                                 {isDescriptionVisible
-                                    ? productDescription
+                                    ? product.description
                                     : "Clique em uma imagem para visualizar a descrição em destaque."}
                             </p>
                         </div>
@@ -179,11 +170,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                 <div className="product-body">
                     <p className="product-category">{product.category}</p>
                     {product.subcategory ? <p className="product-meta">{product.subcategory}</p> : null}
-                    <h3>
-                        <Link href={buildProductPath(product)} className="product-title-link">
-                            {product.name}
-                        </Link>
-                    </h3>
+                    <h3>{product.name}</h3>
                     <p className="product-meta">Tamanhos: {product.sizes.join(" • ")}</p>
                     <p className="product-meta">Cores: {product.colors.join(" • ")}</p>
                     {product.paymentMethods?.length ? (
@@ -199,9 +186,6 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                         <a href={getProductWhatsAppLink(product)} target="_blank" rel="noreferrer" className="primary-button">
                             Comprar no WhatsApp
                         </a>
-                        <Link href={buildProductPath(product)} className="secondary-button">
-                            Ver produto
-                        </Link>
                         {product.mercadoPagoEnabled && product.mercadoPagoLink ? (
                             <a href={product.mercadoPagoLink} target="_blank" rel="noreferrer" className="secondary-button">
                                 Pagar com Mercado Pago

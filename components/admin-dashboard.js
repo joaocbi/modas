@@ -269,9 +269,6 @@ function getEmptyProductForm() {
         subcategory: "",
         sizes: "",
         colors: "",
-        primaryColor: "",
-        variationGroupId: "",
-        slug: "",
         paymentMethods: ["Pix", "Cartão de crédito", "Mercado Pago"],
         price: "",
         oldPrice: "",
@@ -502,9 +499,6 @@ export function AdminDashboard({
                 product.name,
                 product.category,
                 product.subcategory,
-                product.primaryColor,
-                product.variationGroupId,
-                product.slug,
                 product.badge,
                 ...(product.paymentMethods || []),
             ].some((value) => String(value || "").toLowerCase().includes(normalizedSearch))
@@ -880,9 +874,6 @@ export function AdminDashboard({
             subcategory: product.subcategory || "",
             sizes: product.sizes.join(", "),
             colors: product.colors.join(", "),
-            primaryColor: product.primaryColor || "",
-            variationGroupId: product.variationGroupId || "",
-            slug: product.slug || "",
             paymentMethods: product.paymentMethods || [],
             price: pricingForm.price,
             oldPrice: formatDecimalInput(product.oldPrice),
@@ -1877,21 +1868,6 @@ export function AdminDashboard({
                             </label>
                             <label className="field"><span>Tamanhos</span><input value={productForm.sizes} onChange={(event) => updateProductField("sizes", event.target.value)} placeholder="P, M, G" required disabled={!canManage} /></label>
                             <label className="field"><span>Cores</span><input value={productForm.colors} onChange={(event) => updateProductField("colors", event.target.value)} placeholder="Preto, Areia" required disabled={!canManage} /></label>
-                            <label className="field">
-                                <span>Cor principal</span>
-                                <input value={productForm.primaryColor} onChange={(event) => updateProductField("primaryColor", event.target.value)} placeholder="Ex: Preto" disabled={!canManage} />
-                                <small className="field-help">Cor usada como destaque da variação e no seletor da página do produto.</small>
-                            </label>
-                            <label className="field">
-                                <span>Grupo de variação</span>
-                                <input value={productForm.variationGroupId} onChange={(event) => updateProductField("variationGroupId", event.target.value)} placeholder="Ex: vestido-luna" disabled={!canManage} />
-                                <small className="field-help">Produtos com o mesmo grupo aparecem juntos como variações por cor.</small>
-                            </label>
-                            <label className="field field-full">
-                                <span>Slug da URL</span>
-                                <input value={productForm.slug} onChange={(event) => updateProductField("slug", event.target.value)} placeholder="Ex: vestido-luna-preto" disabled={!canManage} />
-                                <small className="field-help">Se ficar vazio, o sistema gera a URL automaticamente.</small>
-                            </label>
                             <label className="field field-full"><span>Descrição</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>
                             <AdminFormSection
                                 icon={FolderKanban}
