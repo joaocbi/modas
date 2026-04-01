@@ -114,7 +114,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
         <>
             <article ref={cardRef} className="product-card" onBlur={handleCardBlur}>
                 <div className="product-gallery" onMouseLeave={handleGalleryMouseLeave}>
-                    <div className={`product-gallery-stage ${isOverlayDescription ? "is-overlay-mode" : ""} ${isOverlayDescription && isDescriptionVisible ? "has-description-card" : ""}`}>
+                    <div className={`product-gallery-stage ${isOverlayDescription ? "is-overlay-mode" : ""} ${isOverlayDescription && isDescriptionVisible ? "has-description-card is-expanded-preview" : ""}`}>
                         <button
                             type="button"
                             className="product-image-button"
@@ -122,7 +122,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                             aria-label={isOverlayDescription ? `Exibir descrição de ${product.name}` : `Ampliar imagem de ${product.name}`}
                             aria-expanded={isOverlayDescription ? isDescriptionVisible : undefined}
                         >
-                            <div className="product-image-wrap">
+                            <div className={`product-image-wrap ${isOverlayDescription && isDescriptionVisible ? "is-expanded-preview" : ""}`}>
                                 <img src={activeImage} alt={product.name} className="product-image" />
                                 <span className="product-badge">{product.badge}</span>
                             </div>
