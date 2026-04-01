@@ -114,7 +114,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
         <>
             <article ref={cardRef} className="product-card" onBlur={handleCardBlur}>
                 <div className="product-gallery" onMouseLeave={handleGalleryMouseLeave}>
-                    <div className={`product-gallery-stage ${isOverlayDescription ? "is-overlay-mode" : ""} ${isOverlayDescription && isDescriptionVisible ? "has-description-card is-expanded-preview" : ""}`}>
+                    <div className={`product-gallery-stage ${isOverlayDescription ? "is-overlay-mode" : ""}`}>
                         <button
                             type="button"
                             className="product-image-button"
@@ -122,18 +122,11 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                             aria-label={isOverlayDescription ? `Exibir descrição de ${product.name}` : `Ampliar imagem de ${product.name}`}
                             aria-expanded={isOverlayDescription ? isDescriptionVisible : undefined}
                         >
-                            <div className={`product-image-wrap ${isOverlayDescription && isDescriptionVisible ? "is-expanded-preview" : ""}`}>
+                            <div className="product-image-wrap">
                                 <img src={activeImage} alt={product.name} className="product-image" />
                                 <span className="product-badge">{product.badge}</span>
                             </div>
                         </button>
-
-                        {showDescription && isOverlayDescription ? (
-                            <aside className={`product-description-side-card ${isDescriptionVisible ? "is-visible" : ""}`} aria-hidden={!isDescriptionVisible}>
-                                <strong>Descrição do produto</strong>
-                                <p>{product.description}</p>
-                            </aside>
-                        ) : null}
                     </div>
 
                     {images.length > 1 ? (
@@ -160,6 +153,18 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                                     ? product.description
                                     : "Clique em uma imagem para visualizar a descrição em destaque."}
                             </p>
+                        </div>
+                    ) : null}
+
+                    {showDescription && isOverlayDescription ? (
+                        <div className={`product-expanded-preview ${isDescriptionVisible ? "is-visible" : ""}`} aria-hidden={!isDescriptionVisible}>
+                            <div className="product-expanded-image-wrap">
+                                <img src={activeImage} alt={`Prévia ampliada de ${product.name}`} className="product-expanded-image" />
+                            </div>
+                            <aside className="product-description-side-card">
+                                <strong>Descrição do produto</strong>
+                                <p>{product.description}</p>
+                            </aside>
                         </div>
                     ) : null}
                 </div>
