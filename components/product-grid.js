@@ -57,16 +57,10 @@ function ProductCard({ product, showDescription, descriptionMode }) {
 
     function handlePrimaryImageClick() {
         if (isOverlayDescription) {
-            setIsDescriptionVisible((currentValue) => {
-                const nextValue = !currentValue;
-
-                console.log("[ProductGrid] Product description toggled from main image.", {
-                    productId: product.id,
-                    productName: product.name,
-                    isVisible: nextValue,
-                });
-
-                return nextValue;
+            setIsDescriptionVisible(true);
+            console.log("[ProductGrid] Product description opened from main image.", {
+                productId: product.id,
+                productName: product.name,
             });
 
             return;
@@ -92,13 +86,13 @@ function ProductCard({ product, showDescription, descriptionMode }) {
         setZoomOrigin(`${x}% ${y}%`);
     }
 
-    function handleCardMouseLeave() {
+    function handleGalleryMouseLeave() {
         if (!isOverlayDescription || !isDescriptionVisible) {
             return;
         }
 
         setIsDescriptionVisible(false);
-        console.log("[ProductGrid] Product description hidden by mouse leave.", {
+        console.log("[ProductGrid] Product description hidden after leaving gallery area.", {
             productId: product.id,
             productName: product.name,
         });
@@ -118,26 +112,29 @@ function ProductCard({ product, showDescription, descriptionMode }) {
 
     return (
         <>
-            <article ref={cardRef} className="product-card" onMouseLeave={handleCardMouseLeave} onBlur={handleCardBlur}>
-                <div className="product-gallery">
-                    <button
-                        type="button"
-                        className="product-image-button"
-                        onClick={handlePrimaryImageClick}
-                        aria-label={isOverlayDescription ? `Exibir descrição de ${product.name}` : `Ampliar imagem de ${product.name}`}
-                        aria-expanded={isOverlayDescription ? isDescriptionVisible : undefined}
-                    >
-                        <div className="product-image-wrap">
-                            <img src={activeImage} alt={product.name} className="product-image" />
-                            <span className="product-badge">{product.badge}</span>
-                            {showDescription && isOverlayDescription ? (
-                                <div className={`product-description-overlay ${isDescriptionVisible ? "is-visible" : ""}`}>
-                                    <strong>Descrição do produto</strong>
-                                    <p>{product.description}</p>
-                                </div>
-                            ) : null}
-                        </div>
-                    </button>
+            <article ref={cardRef} className="product-card" onBlur={handleCardBlur}>
+                <div className="product-gallery" onMouseLeave={handleGalleryMouseLeave}>
+                    <div className={`product-gallery-stage ${isOverlayDescription && isDescriptionVisible ? "has-description-card" : ""}`}>
+                        <button
+                            type="button"
+                            className="product-image-button"
+                            onClick={handlePrimaryImageClick}
+                            aria-label={isOverlayDescription ? `Exibir descrição de ${product.name}` : `Ampliar imagem de ${product.name}`}
+                            aria-expanded={isOverlayDescription ? isDescriptionVisible : undefined}
+                        >
+                            <div className="product-image-wrap">
+                                <img src={activeImage} alt={product.name} className="product-image" />
+                                <span className="product-badge">{product.badge}</span>
+                            </div>
+                        </button>
+
+                        {showDescription && isOverlayDescription && isDescriptionVisible ? (
+                            <aside className="product-description-side-card">
+                                <strong>Descrição do produto</strong>
+                                <p>{product.description}</p>
+                            </aside>
+                        ) : null}
+                    </div>
 
                     {images.length > 1 ? (
                         <div className="product-thumbnail-row">

@@ -685,6 +685,16 @@ img {
     gap: 12px;
 }
 
+.product-gallery-stage {
+    display: grid;
+    gap: 14px;
+}
+
+.product-gallery-stage.has-description-card {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 280px);
+    align-items: stretch;
+}
+
 .product-image-button {
     padding: 0;
     border: 0;
@@ -705,39 +715,31 @@ img {
     overflow: hidden;
 }
 
-.product-description-overlay {
-    position: absolute;
-    inset: auto 0 0;
+.product-description-side-card {
     display: grid;
     gap: 10px;
-    padding: 22px 20px 20px;
-    background: linear-gradient(180deg, rgba(16, 12, 8, 0) 0%, rgba(16, 12, 8, 0.58) 24%, rgba(16, 12, 8, 0.84) 56%, rgba(16, 12, 8, 0.94) 100%);
-    backdrop-filter: blur(3px);
-    color: #ffffff;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    background: var(--color-surface-alt);
+    box-shadow: var(--shadow-soft);
+    color: var(--color-primary);
     text-align: left;
-    opacity: 0;
-    transform: translateY(18px);
-    transition: opacity 180ms ease, transform 220ms ease;
-    pointer-events: none;
 }
 
-.product-description-overlay strong {
+.product-description-side-card strong {
     font-size: 0.95rem;
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+    color: var(--color-accent-strong);
 }
 
-.product-description-overlay p {
+.product-description-side-card p {
     margin: 0;
     font-size: 0.95rem;
-    line-height: 1.6;
-    text-wrap: balance;
-}
-
-.product-description-overlay.is-visible {
-    opacity: 1;
-    transform: translateY(0);
+    line-height: 1.7;
+    color: #5f5648;
 }
 
 .product-image {
@@ -1854,13 +1856,16 @@ img {
         grid-template-columns: 1fr;
     }
 
-    .product-description-overlay {
-        gap: 8px;
-        padding: 18px 16px 16px;
+    .product-gallery-stage.has-description-card {
+        grid-template-columns: 1fr;
     }
 
-    .product-description-overlay strong,
-    .product-description-overlay p {
+    .product-description-side-card {
+        padding: 18px 16px;
+    }
+
+    .product-description-side-card strong,
+    .product-description-side-card p {
         font-size: 0.9rem;
     }
 
