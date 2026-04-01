@@ -67,6 +67,7 @@ async function main() {
                     sizes: product.sizes,
                     colors: product.colors,
                     images: product.images || [product.image],
+                    videos: product.videos || [],
                     paymentMethods: product.paymentMethods,
                     price: product.price,
                     oldPrice: product.oldPrice,

@@ -6,12 +6,18 @@ import { useEffect, useMemo, useState } from "react";
 const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débito", "Boleto", "Mercado Pago"];
 const DEFAULT_PRODUCT_IMAGE = "/assets/product_1.jpg";
 const MAX_PRODUCT_IMAGES = 12;
+const MAX_PRODUCT_VIDEOS = 4;
 const MAX_IMAGE_DIMENSION = 1400;
 const MAX_IMAGE_FILE_BYTES = 260 * 1024;
+const MAX_VIDEO_FILE_BYTES = 350 * 1024 * 1024;
 const MAX_PRODUCT_REQUEST_BYTES = 4 * 1024 * 1024;
 
 function normalizeClientImages(images) {
     return [...new Set((images || []).map((item) => String(item || "").trim()).filter(Boolean))].slice(0, MAX_PRODUCT_IMAGES);
+}
+
+function normalizeClientVideos(videos) {
+    return [...new Set((videos || []).map((item) => String(item || "").trim()).filter(Boolean))].slice(0, MAX_PRODUCT_VIDEOS);
 }
 
 function getUniqueOptionValues(values) {
@@ -280,6 +286,7 @@ function getEmptyProductForm() {
         badge: "",
         image: DEFAULT_PRODUCT_IMAGE,
         images: [DEFAULT_PRODUCT_IMAGE],
+        videos: [],
         featured: true,
     };
 }
@@ -366,6 +373,18 @@ async function uploadProductImages(files) {
     return { response, data };
 }
 
+async function uploadProductVideos(files) {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("files", file));
+
+    const response = await fetch("/api/admin/product-videos", {
+        method: "POST",
+        body: formData,
+    });
+    const data = await parseApiResponse(response);
+    return { response, data };
+}
+
 function MetricCard({ label, value, help }) {
     return (
         <article className="content-card admin-metric-card">
@@ -442,6 +461,7 @@ export function AdminDashboard({
     const [statusType, setStatusType] = useState("success");
     const [isSaving, setIsSaving] = useState(false);
     const [isUploadingImages, setIsUploadingImages] = useState(false);
+    const [isUploadingVideos, setIsUploadingVideos] = useState(false);
     const [isUploadingCategoryImage, setIsUploadingCategoryImage] = useState(false);
     const [imagePreview, setImagePreview] = useState("/assets/product_1.jpg");
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
@@ -765,6 +785,15 @@ export function AdminDashboard({
         setImagePreview(nextPreviewImage);
     }
 
+    function applyProductVideos(nextVideos) {
+        const normalizedVideos = normalizeClientVideos(nextVideos);
+
+        setProductForm((current) => ({
+            ...current,
+            videos: normalizedVideos,
+        }));
+    }
+
     function updateProductImagesFromText(value) {
         const nextImages = value
             .split("\n")
@@ -774,10 +803,25 @@ export function AdminDashboard({
         applyProductImages(nextImages, imagePreview);
     }
 
+    function updateProductVideosFromText(value) {
+        const nextVideos = value
+            .split("\n")
+            .map((item) => item.trim())
+            .filter(Boolean);
+
+        applyProductVideos(nextVideos);
+    }
+
     function removeProductImage(imageToRemove) {
         const nextImages = (productForm.images || []).filter((image) => image !== imageToRemove);
         applyProductImages(nextImages, imagePreview === imageToRemove ? nextImages[0] : imagePreview, { allowEmpty: true });
         showStatus("success", "Imagem removida do produto.");
+    }
+
+    function removeProductVideo(videoToRemove) {
+        const nextVideos = (productForm.videos || []).filter((video) => video !== videoToRemove);
+        applyProductVideos(nextVideos);
+        showStatus("success", "Vídeo removido do produto.");
     }
 
     function focusAdjacentPreviewImage(direction) {
@@ -885,6 +929,7 @@ export function AdminDashboard({
             badge: product.badge,
             image: normalizedImages[0] || DEFAULT_PRODUCT_IMAGE,
             images: normalizedImages,
+            videos: normalizeClientVideos(product.videos || []),
             featured: Boolean(product.featured),
         });
         setImagePreview(normalizedImages[0] || DEFAULT_PRODUCT_IMAGE);
@@ -978,6 +1023,60 @@ export function AdminDashboard({
         }
     }
 
+    async function handleVideoUpload(event) {
+        const files = Array.from(event.target.files || []);
+
+        if (!files.length) {
+            return;
+        }
+
+        const currentVideos = productForm.videos || [];
+        const remainingSlots = MAX_PRODUCT_VIDEOS - currentVideos.length;
+
+        if (remainingSlots <= 0) {
+            showStatus("warning", `Limite de ${MAX_PRODUCT_VIDEOS} vídeos por produto atingido.`);
+            event.target.value = "";
+            return;
+        }
+
+        const filesToLoad = files.slice(0, remainingSlots);
+        const oversizedFile = filesToLoad.find((file) => file.size > MAX_VIDEO_FILE_BYTES);
+
+        if (oversizedFile) {
+            showStatus("warning", `O vídeo ${oversizedFile.name} excede o limite permitido de upload.`);
+            event.target.value = "";
+            return;
+        }
+
+        try {
+            setIsUploadingVideos(true);
+            showStatus("success", "Enviando vídeos em alta resolução...");
+            let uploadedVideos = [];
+
+            if (canUploadProductImages) {
+                const { response, data } = await uploadProductVideos(filesToLoad);
+
+                if (!response.ok) {
+                    showStatus("warning", data.message || "Nao foi possivel enviar os vídeos do produto.");
+                    return;
+                }
+
+                uploadedVideos = normalizeClientVideos(data.videos);
+            } else {
+                uploadedVideos = await Promise.all(filesToLoad.map(readFileAsDataUrl));
+            }
+
+            applyProductVideos([...currentVideos, ...uploadedVideos]);
+            showStatus("success", `${uploadedVideos.length} vídeo(s) carregado(s) com sucesso para este produto.`);
+        } catch (error) {
+            console.log("[AdminDashboard] Failed to upload product videos.", error);
+            showStatus("warning", "Nao foi possivel carregar o vídeo selecionado.");
+        } finally {
+            setIsUploadingVideos(false);
+            event.target.value = "";
+        }
+    }
+
     async function handleProductSubmit(event) {
         event.preventDefault();
         setIsSaving(true);
@@ -996,6 +1095,7 @@ export function AdminDashboard({
                 featured: Boolean(productForm.featured),
                 mercadoPagoEnabled: Boolean(productForm.mercadoPagoEnabled),
                 images: normalizeClientImages(productForm.images),
+                videos: normalizeClientVideos(productForm.videos),
             };
 
             if (getPayloadSizeInBytes(payload) > MAX_PRODUCT_REQUEST_BYTES) {
@@ -1805,6 +1905,7 @@ export function AdminDashboard({
                                 </p>
                                 <div className="admin-modal-meta">
                                     <span>{(productForm.images || []).length} imagem(ns)</span>
+                                    <span>{(productForm.videos || []).length} vídeo(s)</span>
                                     <span>Venda {formatCurrency(productForm.price || 0)}</span>
                                     <span>Custo total {formatCurrency(productForm.totalCost || 0)}</span>
                                     <span>Lucro {formatCurrency(estimatedProfit)}</span>
@@ -1935,6 +2036,47 @@ export function AdminDashboard({
                                     {isUploadingImages ? " Enviando imagens..." : ""}
                                 </small>
                             </label>
+                            <label className="field field-full">
+                                <span>Vídeos por URL</span>
+                                <textarea
+                                    value={(productForm.videos || []).join("\n")}
+                                    onChange={(event) => updateProductVideosFromText(event.target.value)}
+                                    placeholder={"/uploads/products/videos/video-demo.mp4"}
+                                    rows={4}
+                                    disabled={!canManage}
+                                />
+                                <small className="field-help">Um vídeo por linha. Máximo de {MAX_PRODUCT_VIDEOS} vídeos por produto.</small>
+                            </label>
+                            <label className="field field-full">
+                                <span>Upload local de vídeos em alta resolução</span>
+                                <input
+                                    type="file"
+                                    accept="video/mp4,video/webm,video/quicktime,video/x-m4v,video/*"
+                                    multiple
+                                    onChange={handleVideoUpload}
+                                    disabled={!canManage || isUploadingVideos}
+                                />
+                                <small className="field-help">
+                                    Envie até {MAX_PRODUCT_VIDEOS} vídeos por produto.
+                                    {isUploadingVideos ? " Enviando vídeos..." : ""}
+                                </small>
+                            </label>
+                            <div className="field field-full admin-video-gallery-editor">
+                                <span>Vídeos do produto</span>
+                                <div className="admin-video-preview-grid">
+                                    {(productForm.videos || []).map((video, index) => (
+                                        <article key={`${video}-${index}`} className="admin-video-card">
+                                            <video src={video} controls preload="metadata" className="admin-video-player" />
+                                            <div className="admin-video-card-footer">
+                                                <span>{`Vídeo ${index + 1}`}</span>
+                                                <button type="button" className="text-button admin-delete-button" onClick={() => removeProductVideo(video)} disabled={!canManage}>
+                                                    Remover
+                                                </button>
+                                            </div>
+                                        </article>
+                                    ))}
+                                </div>
+                            </div>
                             <div className="field field-full admin-image-gallery-editor">
                                 <span>Galeria do produto</span>
                                 <div className="admin-image-preview">
@@ -2052,8 +2194,8 @@ export function AdminDashboard({
                             <label className="field admin-checkbox-field"><span>Recebimento com Mercado Pago</span><input type="checkbox" checked={productForm.mercadoPagoEnabled} onChange={(event) => updateProductField("mercadoPagoEnabled", event.target.checked)} disabled={!canManage} /></label>
                             <label className="field field-full"><span>Link do Mercado Pago</span><input value={productForm.mercadoPagoLink} onChange={(event) => updateProductField("mercadoPagoLink", event.target.value)} placeholder="https://www.mercadopago.com.br/..." disabled={!canManage || !productForm.mercadoPagoEnabled} /></label>
                             <div className="form-actions field-full admin-modal-actions">
-                                <button type="submit" className="primary-button" disabled={isSaving || isUploadingImages || !canManage}>
-                                    {isUploadingImages ? "Enviando imagens..." : isSaving ? "Salvando..." : productForm.id ? "Atualizar produto" : "Criar produto"}
+                                <button type="submit" className="primary-button" disabled={isSaving || isUploadingImages || isUploadingVideos || !canManage}>
+                                    {isUploadingImages || isUploadingVideos ? "Enviando mídia..." : isSaving ? "Salvando..." : productForm.id ? "Atualizar produto" : "Criar produto"}
                                 </button>
                                 <button type="button" className="secondary-button" onClick={closeProductModal}>Cancelar</button>
                             </div>
