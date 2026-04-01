@@ -82,7 +82,7 @@ export default async function HomePage() {
                     <h2>Peças com visual leve, acabamento premium e caimento impecável</h2>
                     <p>Selecionamos abaixo os itens que merecem mais destaque na vitrine e ajudam a acelerar a conversão.</p>
                 </div>
-                <ProductGrid items={featuredProducts} />
+                <ProductGrid items={featuredProducts} descriptionMode="overlay" />
                 <div className="section-actions">
                     <Link href="/produtos" className="secondary-button">
                         Ver todos os produtos

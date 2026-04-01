@@ -1,6 +1,6 @@
- "use client";
+"use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getProductWhatsAppLink } from "../data/store";
 
 function formatCurrency(value) {
@@ -15,12 +15,36 @@ function getProductImages(product) {
     return images.slice(0, 12);
 }
 
-function ProductCard({ product, showDescription }) {
+function ProductCard({ product, showDescription, descriptionMode }) {
     const images = getProductImages(product);
     const [activeImage, setActiveImage] = useState(images[0]);
     const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
+    const cardRef = useRef(null);
+    const isOverlayDescription = descriptionMode === "overlay";
+
+    useEffect(() => {
+        if (!isOverlayDescription || !isDescriptionVisible) {
+            return undefined;
+        }
+
+        function handlePointerDown(event) {
+            if (!cardRef.current?.contains(event.target)) {
+                setIsDescriptionVisible(false);
+                console.log("[ProductGrid] Product description closed by outside click.", {
+                    productId: product.id,
+                    productName: product.name,
+                });
+            }
+        }
+
+        document.addEventListener("pointerdown", handlePointerDown);
+
+        return () => {
+            document.removeEventListener("pointerdown", handlePointerDown);
+        };
+    }, [isDescriptionVisible, isOverlayDescription, product.id, product.name]);
 
     function handleSelectImage(image) {
         setActiveImage(image);
@@ -29,6 +53,26 @@ function ProductCard({ product, showDescription }) {
             productId: product.id,
             productName: product.name,
         });
+    }
+
+    function handlePrimaryImageClick() {
+        if (isOverlayDescription) {
+            setIsDescriptionVisible((currentValue) => {
+                const nextValue = !currentValue;
+
+                console.log("[ProductGrid] Product description toggled from main image.", {
+                    productId: product.id,
+                    productName: product.name,
+                    isVisible: nextValue,
+                });
+
+                return nextValue;
+            });
+
+            return;
+        }
+
+        openImageLightbox(activeImage);
     }
 
     function openImageLightbox(image) {
@@ -48,19 +92,50 @@ function ProductCard({ product, showDescription }) {
         setZoomOrigin(`${x}% ${y}%`);
     }
 
+    function handleCardMouseLeave() {
+        if (!isOverlayDescription || !isDescriptionVisible) {
+            return;
+        }
+
+        setIsDescriptionVisible(false);
+        console.log("[ProductGrid] Product description hidden by mouse leave.", {
+            productId: product.id,
+            productName: product.name,
+        });
+    }
+
+    function handleCardBlur(event) {
+        if (!isOverlayDescription || event.currentTarget.contains(event.relatedTarget)) {
+            return;
+        }
+
+        setIsDescriptionVisible(false);
+        console.log("[ProductGrid] Product description hidden by focus out.", {
+            productId: product.id,
+            productName: product.name,
+        });
+    }
+
     return (
         <>
-            <article className="product-card">
+            <article ref={cardRef} className="product-card" onMouseLeave={handleCardMouseLeave} onBlur={handleCardBlur}>
                 <div className="product-gallery">
                     <button
                         type="button"
                         className="product-image-button"
-                        onClick={() => openImageLightbox(activeImage)}
-                        aria-label={`Ampliar imagem de ${product.name}`}
+                        onClick={handlePrimaryImageClick}
+                        aria-label={isOverlayDescription ? `Exibir descrição de ${product.name}` : `Ampliar imagem de ${product.name}`}
+                        aria-expanded={isOverlayDescription ? isDescriptionVisible : undefined}
                     >
                         <div className="product-image-wrap">
                             <img src={activeImage} alt={product.name} className="product-image" />
                             <span className="product-badge">{product.badge}</span>
+                            {showDescription && isOverlayDescription && isDescriptionVisible ? (
+                                <div className="product-description-overlay">
+                                    <strong>Descrição do produto</strong>
+                                    <p>{product.description}</p>
+                                </div>
+                            ) : null}
                         </div>
                     </button>
 
@@ -80,7 +155,7 @@ function ProductCard({ product, showDescription }) {
                         </div>
                     ) : null}
 
-                    {showDescription ? (
+                    {showDescription && !isOverlayDescription ? (
                         <div className={`product-description-panel ${isDescriptionVisible ? "is-visible" : ""}`}>
                             <strong>Descrição do produto</strong>
                             <p>
@@ -144,7 +219,7 @@ function ProductCard({ product, showDescription }) {
     );
 }
 
-export function ProductGrid({ items, showDescription = true }) {
+export function ProductGrid({ items, showDescription = true, descriptionMode = "panel" }) {
     if (!items.length) {
         return (
             <div className="empty-state">
@@ -162,7 +237,7 @@ export function ProductGrid({ items, showDescription = true }) {
     return (
         <div className="product-grid">
             {items.map((product) => (
-                <ProductCard key={product.id} product={product} showDescription={showDescription} />
+                <ProductCard key={product.id} product={product} showDescription={showDescription} descriptionMode={descriptionMode} />
             ))}
         </div>
     );
