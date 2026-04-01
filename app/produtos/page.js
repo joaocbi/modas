@@ -33,7 +33,7 @@ export default async function ProductsPage({ searchParams }) {
                             : "Escolha a peça ideal e finalize o atendimento diretamente com a equipe pelo WhatsApp."}
                     </p>
                 </div>
-                <ProductGrid items={filteredProducts} />
+                <ProductGrid items={filteredProducts} descriptionMode="overlay" />
             </section>
         </main>
     );
