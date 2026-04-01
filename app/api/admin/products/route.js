@@ -29,6 +29,8 @@ export async function POST(request) {
         const categories = await syncProductCategoryOption(product.category, product.subcategory);
         revalidatePath("/", "page");
         revalidatePath("/produtos", "page");
+        revalidatePath("/produtos/[slug]", "page");
+        revalidatePath(`/produtos/${product.slug}`, "page");
         console.log("[AdminProducts] Revalidated public product pages after create.", { productId: product.id });
         return NextResponse.json({
             ok: true,
@@ -59,6 +61,8 @@ export async function PATCH(request) {
         const categories = await syncProductCategoryOption(product.category, product.subcategory);
         revalidatePath("/", "page");
         revalidatePath("/produtos", "page");
+        revalidatePath("/produtos/[slug]", "page");
+        revalidatePath(`/produtos/${product.slug}`, "page");
         console.log("[AdminProducts] Revalidated public product pages after update.", { productId: product.id });
         return NextResponse.json({
             ok: true,
@@ -89,6 +93,7 @@ export async function DELETE(request) {
         await deleteProduct(productId);
         revalidatePath("/", "page");
         revalidatePath("/produtos", "page");
+        revalidatePath("/produtos/[slug]", "page");
         console.log("[AdminProducts] Revalidated public product pages after delete.", { productId });
         return NextResponse.json({
             ok: true,

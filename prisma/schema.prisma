@@ -12,6 +12,9 @@ model Product {
   description        String
   category           String
   subcategory        String   @default("")
+  slug               String?  @unique
+  variationGroupId   String?
+  primaryColor       String?
   sizes              String[]
   colors             String[]
   images             String[] @default([])
