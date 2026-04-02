@@ -30,7 +30,13 @@ export function HeroSlider() {
                 <div
                     key={slide.image}
                     className={`hero-slide ${index === activeIndex ? "is-active" : ""}`}
-                    style={{ backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.15)), url(${slide.image})` }}
+                    style={{
+                        backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.15)), url(${slide.image})`,
+                        backgroundSize: "100% 100%, contain",
+                        backgroundPosition: "center, right center",
+                        backgroundRepeat: "no-repeat, no-repeat",
+                        backgroundColor: "#1f1a16",
+                    }}
                 >
                     <div className="hero-content">
                         <p className="section-kicker">{slide.eyebrow}</p>
