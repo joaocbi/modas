@@ -1,0 +1,284 @@
+import { NextResponse } from "next/server";
+import { createOrder, updateOrder } from "../../../../../lib/order-store";
+import { getAllProducts } from "../../../../../lib/product-store";
+import { createMercadoPagoPayment, getMercadoPagoPublicKey, isMercadoPagoConfigured } from "../../../../../lib/mercado-pago";
+
+function sanitizeDocument(value) {
+    return String(value || "").replace(/\D+/g, "");
+}
+
+function splitCustomerName(value) {
+    const normalizedName = String(value || "").trim();
+
+    if (!normalizedName) {
+        return {
+            firstName: "",
+            lastName: "",
+        };
+    }
+
+    const [firstName, ...restNames] = normalizedName.split(/\s+/);
+    return {
+        firstName,
+        lastName: restNames.join(" ").trim(),
+    };
+}
+
+function mapPaymentStatusToOrderStatus(status) {
+    const normalizedStatus = String(status || "").trim().toLowerCase();
+
+    if (normalizedStatus === "approved") {
+        return "paid";
+    }
+
+    if (normalizedStatus === "pending") {
+        return "pending_payment";
+    }
+
+    if (normalizedStatus === "in_process" || normalizedStatus === "authorized") {
+        return "processing_payment";
+    }
+
+    if (normalizedStatus === "cancelled" || normalizedStatus === "rejected" || normalizedStatus === "refunded" || normalizedStatus === "charged_back") {
+        return "payment_failed";
+    }
+
+    return "payment_pending_review";
+}
+
+function normalizeCartItems(items, products) {
+    const productMap = new Map(products.map((product) => [Number(product.id), product]));
+
+    return items
+        .map((item) => {
+            const productId = Number(item?.productId || 0);
+            const quantity = Math.max(1, Number(item?.quantity || 1));
+            const selectedProduct = productMap.get(productId);
+
+            if (!selectedProduct) {
+                return null;
+            }
+
+            return {
+                productId,
+                quantity,
+                selectedSize: String(item?.selectedSize || selectedProduct.sizes?.[0] || "").trim(),
+                selectedColor: String(item?.selectedColor || selectedProduct.colors?.[0] || "").trim(),
+                product: selectedProduct,
+            };
+        })
+        .filter(Boolean);
+}
+
+function buildPaymentDescription(items) {
+    return items
+        .map((item) => `${item.quantity}x ${item.product.name}`)
+        .join(" | ")
+        .slice(0, 240);
+}
+
+function calculateOrderTotal(items) {
+    return Number(
+        items
+            .reduce((total, item) => total + Number(item.product.price || 0) * Number(item.quantity || 0), 0)
+            .toFixed(2)
+    );
+}
+
+function buildNotificationUrl(request) {
+    return new URL("/api/payments/mercado-pago/webhook", request.url).toString();
+}
+
+function buildCustomerPayload(customer) {
+    const normalizedDocument = sanitizeDocument(customer?.cpf);
+    const { firstName, lastName } = splitCustomerName(customer?.name);
+
+    return {
+        email: String(customer?.email || "").trim(),
+        first_name: firstName,
+        last_name: lastName,
+        identification: normalizedDocument
+            ? {
+                  type: "CPF",
+                  number: normalizedDocument,
+              }
+            : undefined,
+    };
+}
+
+function validateCheckoutPayload(payload) {
+    const customerName = String(payload?.customer?.name || "").trim();
+    const customerEmail = String(payload?.customer?.email || "").trim();
+    const customerPhone = String(payload?.customer?.phone || "").trim();
+    const customerCpf = sanitizeDocument(payload?.customer?.cpf);
+    const paymentMethod = String(payload?.paymentMethod || "").trim();
+    const items = Array.isArray(payload?.items) ? payload.items : [];
+
+    if (!customerName || !customerEmail || !customerPhone || customerCpf.length !== 11) {
+        return "Customer data is incomplete.";
+    }
+
+    if (!items.length) {
+        return "Cart is empty.";
+    }
+
+    if (!["pix", "card"].includes(paymentMethod)) {
+        return "Payment method is invalid.";
+    }
+
+    return "";
+}
+
+export async function POST(request) {
+    if (!isMercadoPagoConfigured()) {
+        return NextResponse.json(
+            {
+                ok: false,
+                message: "Mercado Pago is not configured.",
+                requiresPublicKey: !Boolean(getMercadoPagoPublicKey()),
+            },
+            { status: 503 }
+        );
+    }
+
+    let createdOrder = null;
+
+    try {
+        const payload = await request.json();
+        const validationMessage = validateCheckoutPayload(payload);
+
+        if (validationMessage) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    message: validationMessage,
+                },
+                { status: 400 }
+            );
+        }
+
+        const products = await getAllProducts();
+        const normalizedItems = normalizeCartItems(payload.items, products);
+
+        if (!normalizedItems.length) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    message: "No valid products were found for this cart.",
+                },
+                { status: 400 }
+            );
+        }
+
+        const totalAmount = calculateOrderTotal(normalizedItems);
+        const itemCount = normalizedItems.reduce((total, item) => total + item.quantity, 0);
+        const paymentMethod = String(payload.paymentMethod).trim();
+        const customer = {
+            name: String(payload.customer.name || "").trim(),
+            email: String(payload.customer.email || "").trim(),
+            phone: String(payload.customer.phone || "").trim(),
+            cpf: sanitizeDocument(payload.customer.cpf),
+        };
+
+        if (paymentMethod === "card" && (!payload.card?.token || !payload.card?.paymentMethodId)) {
+            return NextResponse.json(
+                {
+                    ok: false,
+                    message: "Card data is incomplete.",
+                },
+                { status: 400 }
+            );
+        }
+
+        createdOrder = await createOrder({
+            customer: customer.name,
+            total: totalAmount,
+            status: "pending_payment",
+            channel: `mercado_pago_${paymentMethod}`,
+            itemCount,
+        });
+
+        console.log("[MercadoPagoPayment] Order created for checkout.", {
+            orderId: createdOrder.id,
+            paymentMethod,
+            totalAmount,
+            itemCount,
+        });
+
+        const paymentPayload = {
+            transaction_amount: totalAmount,
+            description: buildPaymentDescription(normalizedItems),
+            external_reference: String(createdOrder.id),
+            notification_url: buildNotificationUrl(request),
+            statement_descriptor: "DEVILLE",
+            payer: buildCustomerPayload(customer),
+        };
+
+        if (paymentMethod === "pix") {
+            paymentPayload.payment_method_id = "pix";
+        } else {
+            const installments = Math.max(1, Number(payload.card?.installments || 1));
+
+            paymentPayload.token = String(payload.card.token || "").trim();
+            paymentPayload.installments = installments;
+            paymentPayload.payment_method_id = String(payload.card.paymentMethodId || "").trim();
+
+            if (payload.card?.issuerId) {
+                paymentPayload.issuer_id = Number(payload.card.issuerId);
+            }
+        }
+
+        const payment = await createMercadoPagoPayment(paymentPayload, {
+            idempotencyKey: crypto.randomUUID(),
+        });
+
+        const nextStatus = mapPaymentStatusToOrderStatus(payment.status);
+        await updateOrder(createdOrder.id, {
+            status: nextStatus,
+        });
+
+        console.log("[MercadoPagoPayment] Payment created successfully.", {
+            orderId: createdOrder.id,
+            paymentId: payment.id,
+            status: payment.status,
+            paymentMethod,
+        });
+
+        return NextResponse.json({
+            ok: true,
+            order: {
+                ...createdOrder,
+                status: nextStatus,
+            },
+            payment: {
+                id: payment.id,
+                method: paymentMethod,
+                status: payment.status,
+                statusDetail: payment.status_detail,
+                qrCode: payment.point_of_interaction?.transaction_data?.qr_code || "",
+                qrCodeBase64: payment.point_of_interaction?.transaction_data?.qr_code_base64 || "",
+                ticketUrl: payment.transaction_details?.external_resource_url || "",
+            },
+        });
+    } catch (error) {
+        console.log("[MercadoPagoPayment] Failed to create payment.", error);
+
+        if (createdOrder?.id) {
+            try {
+                await updateOrder(createdOrder.id, {
+                    status: "payment_error",
+                });
+            } catch (updateError) {
+                console.log("[MercadoPagoPayment] Failed to flag order as payment_error.", updateError);
+            }
+        }
+
+        return NextResponse.json(
+            {
+                ok: false,
+                message: "Unable to process the payment right now.",
+            },
+            { status: 500 }
+        );
+    }
+}

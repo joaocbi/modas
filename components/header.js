@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { navigation } from "../data/store";
+import { countCartItems, getCartItems, subscribeToCart } from "../lib/cart";
 
 function isActive(pathname, href) {
     if (href === "/") {
@@ -17,6 +18,16 @@ function isActive(pathname, href) {
 export function Header() {
     const pathname = usePathname();
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [cartCount, setCartCount] = useState(0);
+
+    useEffect(() => {
+        function syncCartCount(items) {
+            setCartCount(countCartItems(items));
+        }
+
+        syncCartCount(getCartItems());
+        return subscribeToCart(syncCartCount);
+    }, []);
 
     return (
         <header className="site-header">
@@ -53,7 +64,7 @@ export function Header() {
                     </Link>
                     <Link href="/carrinho" className="icon-button cart-button" aria-label="Carrinho">
                         <ShoppingBag size={18} />
-                        <span className="cart-badge">0</span>
+                        <span className="cart-badge">{cartCount}</span>
                     </Link>
                 </div>
             </div>

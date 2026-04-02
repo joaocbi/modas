@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { getProductWhatsAppLink } from "../data/store";
+import { addCartItem } from "../lib/cart";
 
 function formatCurrency(value) {
     return new Intl.NumberFormat("pt-BR", {
@@ -21,8 +23,17 @@ function ProductCard({ product, showDescription, descriptionMode }) {
     const [isDescriptionVisible, setIsDescriptionVisible] = useState(false);
     const [isLightboxOpen, setIsLightboxOpen] = useState(false);
     const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
+    const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || "");
+    const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "");
+    const [cartFeedback, setCartFeedback] = useState("");
     const cardRef = useRef(null);
     const isOverlayDescription = descriptionMode === "overlay";
+
+    useEffect(() => {
+        setSelectedSize(product.sizes?.[0] || "");
+        setSelectedColor(product.colors?.[0] || "");
+        setCartFeedback("");
+    }, [product.colors, product.id, product.sizes]);
 
     useEffect(() => {
         if (!isOverlayDescription || !isDescriptionVisible) {
@@ -110,6 +121,21 @@ function ProductCard({ product, showDescription, descriptionMode }) {
         });
     }
 
+    function handleAddToCart() {
+        addCartItem({
+            productId: product.id,
+            quantity: 1,
+            selectedSize,
+            selectedColor,
+        });
+        setCartFeedback("Added to cart");
+        console.log("[ProductGrid] Product added to cart.", {
+            productId: product.id,
+            selectedSize,
+            selectedColor,
+        });
+    }
+
     return (
         <>
             <article ref={cardRef} className="product-card" onBlur={handleCardBlur}>
@@ -172,19 +198,48 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                         <span>{formatCurrency(product.oldPrice)}</span>
                     </div>
 
+                    <div className="product-option-grid">
+                        <label className="product-option-field">
+                            <span>Size</span>
+                            <select value={selectedSize} onChange={(event) => setSelectedSize(event.target.value)}>
+                                {product.sizes.map((size) => (
+                                    <option key={`${product.id}-size-${size}`} value={size}>
+                                        {size}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label className="product-option-field">
+                            <span>Color</span>
+                            <select value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)}>
+                                {product.colors.map((color) => (
+                                    <option key={`${product.id}-color-${color}`} value={color}>
+                                        {color}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+
                     <div className="product-actions">
-                        <a href={getProductWhatsAppLink(product)} target="_blank" rel="noreferrer" className="primary-button">
-                            Comprar no WhatsApp
-                        </a>
-                        {product.mercadoPagoEnabled && product.mercadoPagoLink ? (
-                            <a href={product.mercadoPagoLink} target="_blank" rel="noreferrer" className="secondary-button">
-                                Pagar com Mercado Pago
-                            </a>
-                        ) : null}
+                        <button type="button" className="primary-button" onClick={handleAddToCart}>
+                            Add to cart
+                        </button>
+                        <Link
+                            href={`/carrinho?buyNow=${product.id}&size=${encodeURIComponent(selectedSize)}&color=${encodeURIComponent(selectedColor)}`}
+                            className="secondary-button"
+                        >
+                            Buy now
+                        </Link>
                         <a href="/contato" className="text-button">
-                            Tirar dúvidas
+                            Ask a question
+                        </a>
+                        <a href={getProductWhatsAppLink(product)} target="_blank" rel="noreferrer" className="text-button">
+                            WhatsApp
                         </a>
                     </div>
+                    {cartFeedback ? <p className="product-feedback">{cartFeedback}</p> : null}
                 </div>
             </article>
 

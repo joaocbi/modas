@@ -1,35 +1,29 @@
-import Link from "next/link";
 import { Breadcrumb } from "../../components/breadcrumb";
-import { store } from "../../data/store";
+import { CheckoutPageClient } from "../../components/checkout-page-client";
+import { getAllProducts } from "../../lib/product-store";
 
 export const metadata = {
     title: "Carrinho | DeVille Fashion",
 };
 
-export default function CartPage() {
+export const revalidate = 300;
+
+export default async function CartPage({ searchParams }) {
+    const resolvedSearchParams = await searchParams;
+    const products = await getAllProducts();
+    const buyNowProductId = Number(resolvedSearchParams?.buyNow || 0) || null;
+    const buyNowSize = String(resolvedSearchParams?.size || "").trim();
+    const buyNowColor = String(resolvedSearchParams?.color || "").trim();
+
     return (
         <main className="page-shell">
             <Breadcrumb currentPage="Carrinho" />
-            <section className="section narrow-section">
-                <div className="empty-state">
-                    <p className="section-kicker">Seu carrinho</p>
-                    <h1>Seu carrinho está vazio no momento</h1>
-                    <p>Explore o catálogo e fale com a equipe para reservar suas peças favoritas com atendimento personalizado.</p>
-                    <div className="section-actions">
-                        <Link href="/produtos" className="primary-button">
-                            Ver produtos
-                        </Link>
-                        <a
-                            href={`https://wa.me/${store.whatsapp}?text=Olá, quero montar meu pedido com a DeVille Fashion.`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="secondary-button"
-                        >
-                            Montar pedido no WhatsApp
-                        </a>
-                    </div>
-                </div>
-            </section>
+            <CheckoutPageClient
+                initialProducts={products}
+                buyNowProductId={buyNowProductId}
+                buyNowSize={buyNowSize}
+                buyNowColor={buyNowColor}
+            />
         </main>
     );
 }
