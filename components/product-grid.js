@@ -14,7 +14,7 @@ function formatCurrency(value) {
 
 function getProductImages(product) {
     const images = Array.isArray(product.images) && product.images.length ? product.images : [product.image].filter(Boolean);
-    return images.slice(0, 12);
+    return images.slice(0, 20);
 }
 
 function ProductCard({ product, showDescription, descriptionMode }) {
