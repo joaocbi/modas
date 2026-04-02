@@ -45,24 +45,24 @@ function getStatusMessage(payment) {
     const normalizedStatus = String(payment?.status || "").trim().toLowerCase();
 
     if (normalizedStatus === "approved") {
-        return "Payment approved successfully.";
+        return "Pagamento aprovado com sucesso.";
     }
 
     if (normalizedStatus === "pending") {
         return payment?.method === "pix"
-            ? "Pix generated successfully. Finish the payment with the QR code below."
-            : "Payment created and waiting for confirmation.";
+            ? "Pix gerado com sucesso. Finalize o pagamento com o QR Code abaixo."
+            : "Pagamento criado e aguardando confirmação.";
     }
 
     if (normalizedStatus === "in_process" || normalizedStatus === "authorized") {
-        return "Payment is being reviewed by Mercado Pago.";
+        return "Pagamento em análise pelo Mercado Pago.";
     }
 
     if (normalizedStatus === "rejected") {
-        return "Payment was rejected. Please review the data and try again.";
+        return "O pagamento foi recusado. Revise os dados e tente novamente.";
     }
 
-    return "Payment processed. Track the order status in the admin panel.";
+    return "Pagamento processado. Acompanhe o status do pedido no painel administrativo.";
 }
 
 export function CheckoutPageClient({
@@ -87,6 +87,7 @@ export function CheckoutPageClient({
     const [paymentResult, setPaymentResult] = useState(null);
     const [sdkReady, setSdkReady] = useState(false);
     const [cardFormReady, setCardFormReady] = useState(false);
+    const buyNowAppliedRef = useRef("");
     const [customer, setCustomer] = useState({
         name: "",
         email: "",
@@ -116,6 +117,12 @@ export function CheckoutPageClient({
             return;
         }
 
+        const buyNowKey = [buyNowProductId, buyNowSize, buyNowColor].join("::");
+
+        if (buyNowAppliedRef.current === buyNowKey) {
+            return;
+        }
+
         const product = initialProducts.find((currentProduct) => Number(currentProduct.id) === Number(buyNowProductId));
 
         if (!product) {
@@ -124,20 +131,43 @@ export function CheckoutPageClient({
 
         const selectedSize = String(buyNowSize || product.sizes?.[0] || "").trim();
         const selectedColor = String(buyNowColor || product.colors?.[0] || "").trim();
-        const nextItems = [
-            {
-                productId: Number(product.id),
-                quantity: 1,
-                selectedSize,
-                selectedColor,
-            },
-        ];
+        const storedItems = getCartItems();
+        const existingItemIndex = storedItems.findIndex(
+            (item) =>
+                Number(item.productId) === Number(product.id) &&
+                String(item.selectedSize || "").trim() === selectedSize &&
+                String(item.selectedColor || "").trim() === selectedColor
+        );
 
-        console.log("[Checkout] Buy now flow started.", {
+        const nextItems =
+            existingItemIndex >= 0
+                ? storedItems.map((item, index) =>
+                      index === existingItemIndex
+                          ? {
+                                ...item,
+                                quantity: Math.max(1, Number(item.quantity || 1)) + 1,
+                            }
+                          : item
+                  )
+                : [
+                      ...storedItems,
+                      {
+                          productId: Number(product.id),
+                          quantity: 1,
+                          selectedSize,
+                          selectedColor,
+                      },
+                  ];
+
+        console.log("[Checkout] Buy now flow added product to cart.", {
             productId: product.id,
             selectedSize,
             selectedColor,
+            previousItemCount: storedItems.length,
+            nextItemCount: nextItems.length,
         });
+
+        buyNowAppliedRef.current = buyNowKey;
         setCartItems(nextItems);
         setCartState(nextItems);
     }, [buyNowColor, buyNowProductId, buyNowSize, initialProducts]);
@@ -157,7 +187,7 @@ export function CheckoutPageClient({
                 }
 
                 if (!response.ok || !data.ok) {
-                    throw new Error(data.message || "Unable to load Mercado Pago configuration.");
+                    throw new Error(data.message || "Nao foi possivel carregar a configuracao do Mercado Pago.");
                 }
 
                 setPaymentConfig({
@@ -175,7 +205,7 @@ export function CheckoutPageClient({
             } catch (error) {
                 console.log("[Checkout] Failed to load payment config.", error);
                 if (!isCancelled) {
-                    setErrorMessage("Mercado Pago is not configured yet. Add the payment keys to enable checkout.");
+                    setErrorMessage("O Mercado Pago ainda nao esta configurado. Adicione as chaves para habilitar o checkout.");
                 }
             } finally {
                 if (!isCancelled) {
@@ -201,6 +231,16 @@ export function CheckoutPageClient({
         () => resolvedItems.map((item) => `${item.key}:${item.quantity}`).join("|"),
         [resolvedItems]
     );
+    const hasLockedPayment = useMemo(() => {
+        const normalizedStatus = String(paymentResult?.payment?.status || "").trim().toLowerCase();
+        return ["approved", "authorized", "pending", "in_process"].includes(normalizedStatus);
+    }, [paymentResult]);
+
+    useEffect(() => {
+        setPaymentResult(null);
+        setStatusMessage("");
+        setCopiedPixCode(false);
+    }, [cartFingerprint]);
 
     useEffect(() => {
         if (
@@ -264,7 +304,7 @@ export function CheckoutPageClient({
                 onFormMounted: (error) => {
                     if (error) {
                         console.log("[Checkout] Failed to mount card form.", error);
-                        setErrorMessage("Unable to load the card form right now.");
+                        setErrorMessage("Nao foi possivel carregar o formulario do cartao agora.");
                         return;
                     }
 
@@ -284,7 +324,7 @@ export function CheckoutPageClient({
                 },
                 onError: (error) => {
                     console.log("[Checkout] Card form error.", error);
-                    setErrorMessage("Please review the card data and try again.");
+                    setErrorMessage("Revise os dados do cartao e tente novamente.");
                 },
                 onFetching: (resource) => {
                     console.log("[Checkout] Card form fetching resource.", { resource });
@@ -315,7 +355,7 @@ export function CheckoutPageClient({
         const normalizedCpf = sanitizeDocument(customerRef.current.cpf);
 
         if (!normalizedName || !normalizedEmail || !normalizedPhone || normalizedCpf.length !== 11) {
-            setErrorMessage("Fill in name, email, phone and a valid CPF before continuing.");
+            setErrorMessage("Preencha nome, e-mail, telefone e um CPF valido antes de continuar.");
             return false;
         }
 
@@ -324,7 +364,12 @@ export function CheckoutPageClient({
 
     async function submitPayment(method, cardPayload = null) {
         if (!resolvedItems.length) {
-            setErrorMessage("Your cart is empty.");
+            setErrorMessage("Seu carrinho esta vazio.");
+            return;
+        }
+
+        if (hasLockedPayment) {
+            setErrorMessage("Ja existe um pagamento em aberto para este carrinho. Finalize ou aguarde a confirmacao antes de gerar outro.");
             return;
         }
 
@@ -362,7 +407,7 @@ export function CheckoutPageClient({
             const data = await response.json();
 
             if (!response.ok || !data.ok) {
-                throw new Error(data.message || "Unable to create the payment.");
+                throw new Error(data.message || "Nao foi possivel criar o pagamento.");
             }
 
             console.log("[Checkout] Payment created.", data);
@@ -375,7 +420,7 @@ export function CheckoutPageClient({
             }
         } catch (error) {
             console.log("[Checkout] Payment request failed.", error);
-            setErrorMessage(error.message || "Unable to complete the payment.");
+            setErrorMessage(error.message || "Nao foi possivel concluir o pagamento.");
         } finally {
             setIsSubmitting(false);
         }
@@ -392,7 +437,7 @@ export function CheckoutPageClient({
             console.log("[Checkout] Pix code copied to clipboard.");
         } catch (error) {
             console.log("[Checkout] Failed to copy Pix code.", error);
-            setErrorMessage("Unable to copy the Pix code automatically.");
+            setErrorMessage("Nao foi possivel copiar o codigo Pix automaticamente.");
         }
     }
 
@@ -402,18 +447,18 @@ export function CheckoutPageClient({
 
             <section className="section narrow-section">
                 <div className="section-heading align-center">
-                    <p className="section-kicker">Secure checkout</p>
-                    <h1>Finish your order with Pix or card</h1>
-                    <p>Choose the products, confirm your customer data and pay directly on the site with Mercado Pago.</p>
+                    <p className="section-kicker">Checkout seguro</p>
+                    <h1>Finalize seu pedido com Pix ou cartao</h1>
+                    <p>Escolha os produtos, confirme seus dados e pague direto no site com Mercado Pago.</p>
                 </div>
 
                 {!resolvedItems.length ? (
                     <div className="empty-state">
-                        <h1>Your cart is empty right now</h1>
-                        <p>Add products from the catalog to generate the payment on this page.</p>
+                        <h1>Seu carrinho esta vazio no momento</h1>
+                        <p>Adicione produtos do catalogo para gerar o pagamento nesta pagina.</p>
                         <div className="section-actions">
                             <Link href="/produtos" className="primary-button">
-                                View products
+                                Ver produtos
                             </Link>
                         </div>
                     </div>
@@ -423,16 +468,16 @@ export function CheckoutPageClient({
                             <article className="content-card checkout-card">
                                 <div className="checkout-card-header">
                                     <div>
-                                        <p className="section-kicker">Customer data</p>
-                                        <h2>Billing details</h2>
+                                        <p className="section-kicker">Dados do cliente</p>
+                                        <h2>Informacoes de cobranca</h2>
                                     </div>
-                                    <span className="checkout-chip">{totalItems} item(s)</span>
+                                    <span className="checkout-chip">{totalItems} item(ns)</span>
                                 </div>
 
                                 <div className="form-grid">
                                     <label className="field">
-                                        <span>Full name</span>
-                                        <input value={customer.name} onChange={(event) => updateCustomerField("name", event.target.value)} placeholder="Customer full name" />
+                                        <span>Nome completo</span>
+                                        <input value={customer.name} onChange={(event) => updateCustomerField("name", event.target.value)} placeholder="Nome completo do cliente" />
                                     </label>
 
                                     <label className="field">
@@ -441,13 +486,25 @@ export function CheckoutPageClient({
                                     </label>
 
                                     <label className="field">
-                                        <span>Phone</span>
-                                        <input value={customer.phone} onChange={(event) => updateCustomerField("phone", event.target.value)} placeholder="(11) 99999-9999" />
+                                        <span>Telefone</span>
+                                        <input
+                                            value={customer.phone}
+                                            onChange={(event) => updateCustomerField("phone", event.target.value)}
+                                            placeholder="(11) 99999-9999"
+                                            inputMode="tel"
+                                            autoComplete="tel"
+                                        />
                                     </label>
 
                                     <label className="field">
                                         <span>CPF</span>
-                                        <input value={customer.cpf} onChange={(event) => updateCustomerField("cpf", event.target.value)} placeholder="000.000.000-00" />
+                                        <input
+                                            value={customer.cpf}
+                                            onChange={(event) => updateCustomerField("cpf", event.target.value)}
+                                            placeholder="000.000.000-00"
+                                            inputMode="numeric"
+                                            autoComplete="off"
+                                        />
                                     </label>
                                 </div>
                             </article>
@@ -455,8 +512,8 @@ export function CheckoutPageClient({
                             <article className="content-card checkout-card">
                                 <div className="checkout-card-header">
                                     <div>
-                                        <p className="section-kicker">Payment</p>
-                                        <h2>Choose how to pay</h2>
+                                        <p className="section-kicker">Pagamento</p>
+                                        <h2>Escolha como pagar</h2>
                                     </div>
                                 </div>
 
@@ -475,14 +532,14 @@ export function CheckoutPageClient({
                                         onClick={() => setPaymentMethod("card")}
                                         disabled={!paymentConfig.cardEnabled || isSubmitting}
                                     >
-                                        Credit card
+                                        Cartao de credito
                                     </button>
                                 </div>
 
-                                {isLoadingConfig ? <p className="checkout-helper">Loading payment configuration...</p> : null}
+                                {isLoadingConfig ? <p className="checkout-helper">Carregando configuracao de pagamento...</p> : null}
                                 {!paymentConfig.enabled && !isLoadingConfig ? (
                                     <p className="checkout-helper checkout-helper-error">
-                                        Mercado Pago keys are missing. Add `MERCADO_PAGO_ACCESS_TOKEN` and `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` to enable checkout.
+                                        As chaves do Mercado Pago nao foram configuradas. Adicione `MERCADO_PAGO_ACCESS_TOKEN` e `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY` para habilitar o checkout.
                                     </p>
                                 ) : null}
 
@@ -491,9 +548,9 @@ export function CheckoutPageClient({
 
                                 {paymentMethod === "pix" ? (
                                     <div className="payment-panel">
-                                        <p className="checkout-helper">Generate the Pix charge and show the QR code immediately after the order is created.</p>
-                                        <button type="button" className="primary-button" onClick={() => submitPayment("pix")} disabled={isSubmitting || !paymentConfig.pixEnabled}>
-                                            {isSubmitting ? "Generating Pix..." : "Generate Pix"}
+                                        <p className="checkout-helper">Gere a cobranca Pix e exiba o QR Code logo apos a criacao do pedido.</p>
+                                        <button type="button" className="primary-button" onClick={() => submitPayment("pix")} disabled={isSubmitting || !paymentConfig.pixEnabled || hasLockedPayment}>
+                                            {isSubmitting ? "Gerando Pix..." : "Gerar Pix"}
                                         </button>
 
                                         {paymentResult?.payment?.method === "pix" && paymentResult.payment.qrCode ? (
@@ -513,7 +570,7 @@ export function CheckoutPageClient({
                                                 />
                                                 <div className="section-actions">
                                                     <button type="button" className="secondary-button" onClick={copyPixCode}>
-                                                        {copiedPixCode ? "Copied" : "Copy Pix code"}
+                                                        {copiedPixCode ? "Copiado" : "Copiar codigo Pix"}
                                                     </button>
                                                 </div>
                                             </div>
@@ -521,7 +578,7 @@ export function CheckoutPageClient({
                                     </div>
                                 ) : (
                                     <div className="payment-panel">
-                                        <p className="checkout-helper">The card data is tokenized by Mercado Pago directly in the browser.</p>
+                                        <p className="checkout-helper">Os dados do cartao sao tokenizados pelo Mercado Pago diretamente no navegador.</p>
 
                                         <form id="checkout-card-form" className="checkout-card-form">
                                             <input id="form-checkout__cardholderName" type="hidden" value={customer.name} readOnly />
@@ -533,39 +590,39 @@ export function CheckoutPageClient({
 
                                             <div className="form-grid">
                                                 <label className="field field-full">
-                                                    <span>Card number</span>
+                                                    <span>Numero do cartao</span>
                                                     <div id="form-checkout__cardNumber" className="checkout-sdk-field" />
                                                 </label>
 
                                                 <label className="field">
-                                                    <span>Expiration date</span>
+                                                    <span>Data de validade</span>
                                                     <div id="form-checkout__expirationDate" className="checkout-sdk-field" />
                                                 </label>
 
                                                 <label className="field">
-                                                    <span>Security code</span>
+                                                    <span>Codigo de seguranca</span>
                                                     <div id="form-checkout__securityCode" className="checkout-sdk-field" />
                                                 </label>
 
                                                 <label className="field">
-                                                    <span>Issuer</span>
+                                                    <span>Banco emissor</span>
                                                     <select id="form-checkout__issuer" defaultValue="" />
                                                 </label>
 
                                                 <label className="field">
-                                                    <span>Installments</span>
+                                                    <span>Parcelas</span>
                                                     <select id="form-checkout__installments" defaultValue="" />
                                                 </label>
                                             </div>
 
-                                            <button type="submit" className="primary-button" disabled={isSubmitting || !cardFormReady || !paymentConfig.cardEnabled}>
-                                                {isSubmitting ? "Processing card..." : "Pay with card"}
+                                            <button type="submit" className="primary-button" disabled={isSubmitting || !cardFormReady || !paymentConfig.cardEnabled || hasLockedPayment}>
+                                                {isSubmitting ? "Processando cartao..." : "Pagar com cartao"}
                                             </button>
                                         </form>
 
-                                        {!sdkReady ? <p className="checkout-helper">Loading Mercado Pago SDK...</p> : null}
+                                        {!sdkReady ? <p className="checkout-helper">Carregando SDK do Mercado Pago...</p> : null}
                                         {sdkReady && !cardFormReady && paymentConfig.cardEnabled ? (
-                                            <p className="checkout-helper">Preparing secure card fields...</p>
+                                            <p className="checkout-helper">Preparando campos seguros do cartao...</p>
                                         ) : null}
                                     </div>
                                 )}
@@ -576,8 +633,8 @@ export function CheckoutPageClient({
                             <article className="content-card checkout-card checkout-summary-card">
                                 <div className="checkout-card-header">
                                     <div>
-                                        <p className="section-kicker">Summary</p>
-                                        <h2>Your cart</h2>
+                                        <p className="section-kicker">Resumo</p>
+                                        <h2>Seu carrinho</h2>
                                     </div>
                                 </div>
 
@@ -588,21 +645,23 @@ export function CheckoutPageClient({
                                             <div className="checkout-summary-copy">
                                                 <strong>{item.product.name}</strong>
                                                 <span>
-                                                    {item.selectedColor || "Default color"} • {item.selectedSize || "Default size"}
+                                                    {item.selectedColor || "Cor padrao"} • {item.selectedSize || "Tamanho padrao"}
                                                 </span>
-                                                <span>{formatCurrency(item.product.price)} each</span>
+                                                <span>{formatCurrency(item.product.price)} cada</span>
                                                 <div className="checkout-quantity-row">
                                                     <label className="field">
-                                                        <span>Qty</span>
+                                                        <span>Qtd.</span>
                                                         <input
                                                             type="number"
                                                             min="1"
                                                             value={item.quantity}
                                                             onChange={(event) => updateCartItemQuantity(item.key, event.target.value)}
+                                                            disabled={hasLockedPayment}
+                                                            inputMode="numeric"
                                                         />
                                                     </label>
-                                                    <button type="button" className="text-button" onClick={() => removeCartItem(item.key)}>
-                                                        Remove
+                                                    <button type="button" className="text-button" onClick={() => removeCartItem(item.key)} disabled={hasLockedPayment}>
+                                                        Remover
                                                     </button>
                                                 </div>
                                             </div>
@@ -618,7 +677,7 @@ export function CheckoutPageClient({
 
                                 <div className="section-actions">
                                     <Link href="/produtos" className="secondary-button">
-                                        Add more products
+                                        Adicionar mais produtos
                                     </Link>
                                 </div>
                             </article>

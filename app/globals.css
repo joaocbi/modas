@@ -243,6 +243,7 @@ img {
     background: var(--color-surface);
     color: var(--color-text);
     padding: 12px 18px;
+    min-height: 50px;
     border-radius: 999px;
     cursor: pointer;
     transition: transform var(--transition), border-color var(--transition), background var(--transition);
@@ -319,6 +320,10 @@ img {
     grid-template-columns: 82px minmax(0, 1fr) auto;
     gap: 14px;
     align-items: start;
+}
+
+.checkout-summary-item > strong {
+    white-space: nowrap;
 }
 
 .checkout-summary-image {
@@ -2086,6 +2091,11 @@ img {
     .checkout-summary-card {
         position: static;
     }
+
+    .checkout-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }
 
 @media (max-width: 720px) {
@@ -2095,6 +2105,29 @@ img {
 
     .product-option-grid {
         grid-template-columns: 1fr;
+    }
+
+    .payment-toggle {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .checkout-summary-item > strong {
+        white-space: normal;
+    }
+
+    .checkout-summary-image {
+        width: 96px;
+        height: 120px;
+    }
+
+    .checkout-quantity-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .checkout-quantity-row .field {
+        max-width: none;
     }
 }
 
@@ -2171,6 +2204,37 @@ img {
     .product-grid,
     .form-grid {
         grid-template-columns: 1fr;
+    }
+
+    .field input,
+    .field textarea,
+    .field select,
+    .pix-code-textarea,
+    .checkout-card-form select {
+        font-size: 16px;
+    }
+
+    .checkout-layout {
+        gap: 18px;
+    }
+
+    .checkout-main,
+    .checkout-sidebar,
+    .checkout-card,
+    .payment-panel {
+        gap: 16px;
+    }
+
+    .checkout-sdk-field,
+    .checkout-card-form select {
+        min-height: 56px;
+    }
+
+    .payment-panel .primary-button,
+    .payment-panel .secondary-button,
+    .payment-toggle-button {
+        width: 100%;
+        justify-content: center;
     }
 
     .product-gallery-stage {

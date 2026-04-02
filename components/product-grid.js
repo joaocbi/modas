@@ -128,7 +128,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
             selectedSize,
             selectedColor,
         });
-        setCartFeedback("Added to cart");
+        setCartFeedback("Adicionado ao carrinho");
         console.log("[ProductGrid] Product added to cart.", {
             productId: product.id,
             selectedSize,
@@ -200,7 +200,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
 
                     <div className="product-option-grid">
                         <label className="product-option-field">
-                            <span>Size</span>
+                            <span>Tamanho</span>
                             <select value={selectedSize} onChange={(event) => setSelectedSize(event.target.value)}>
                                 {product.sizes.map((size) => (
                                     <option key={`${product.id}-size-${size}`} value={size}>
@@ -211,7 +211,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                         </label>
 
                         <label className="product-option-field">
-                            <span>Color</span>
+                            <span>Cor</span>
                             <select value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)}>
                                 {product.colors.map((color) => (
                                     <option key={`${product.id}-color-${color}`} value={color}>
@@ -224,16 +224,16 @@ function ProductCard({ product, showDescription, descriptionMode }) {
 
                     <div className="product-actions">
                         <button type="button" className="primary-button" onClick={handleAddToCart}>
-                            Add to cart
+                            Adicionar ao carrinho
                         </button>
                         <Link
                             href={`/carrinho?buyNow=${product.id}&size=${encodeURIComponent(selectedSize)}&color=${encodeURIComponent(selectedColor)}`}
                             className="secondary-button"
                         >
-                            Buy now
+                            Comprar agora
                         </Link>
                         <a href="/contato" className="text-button">
-                            Ask a question
+                            Tirar duvidas
                         </a>
                         <a href={getProductWhatsAppLink(product)} target="_blank" rel="noreferrer" className="text-button">
                             WhatsApp

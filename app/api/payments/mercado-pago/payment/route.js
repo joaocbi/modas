@@ -115,15 +115,15 @@ function validateCheckoutPayload(payload) {
     const items = Array.isArray(payload?.items) ? payload.items : [];
 
     if (!customerName || !customerEmail || !customerPhone || customerCpf.length !== 11) {
-        return "Customer data is incomplete.";
+        return "Os dados do cliente estao incompletos.";
     }
 
     if (!items.length) {
-        return "Cart is empty.";
+        return "O carrinho esta vazio.";
     }
 
     if (!["pix", "card"].includes(paymentMethod)) {
-        return "Payment method is invalid.";
+        return "A forma de pagamento e invalida.";
     }
 
     return "";
@@ -134,7 +134,7 @@ export async function POST(request) {
         return NextResponse.json(
             {
                 ok: false,
-                message: "Mercado Pago is not configured.",
+                    message: "Mercado Pago nao esta configurado.",
                 requiresPublicKey: !Boolean(getMercadoPagoPublicKey()),
             },
             { status: 503 }
@@ -164,7 +164,7 @@ export async function POST(request) {
             return NextResponse.json(
                 {
                     ok: false,
-                    message: "No valid products were found for this cart.",
+                    message: "Nenhum produto valido foi encontrado para este carrinho.",
                 },
                 { status: 400 }
             );
@@ -184,7 +184,7 @@ export async function POST(request) {
             return NextResponse.json(
                 {
                     ok: false,
-                    message: "Card data is incomplete.",
+                    message: "Os dados do cartao estao incompletos.",
                 },
                 { status: 400 }
             );
@@ -276,7 +276,7 @@ export async function POST(request) {
         return NextResponse.json(
             {
                 ok: false,
-                message: "Unable to process the payment right now.",
+                message: "Nao foi possivel processar o pagamento agora.",
             },
             { status: 500 }
         );
