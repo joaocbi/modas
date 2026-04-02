@@ -15,8 +15,6 @@ export const revalidate = 300;
 export default async function HomePage() {
     const products = await getAllProducts();
     const featuredProducts = products.filter((product) => product.featured);
-    const totalCategories = new Set(products.map((product) => String(product.category || "").trim()).filter(Boolean)).size;
-    const totalPaymentMethods = new Set(products.flatMap((product) => product.paymentMethods || [])).size;
 
     return (
         <main>
@@ -30,32 +28,6 @@ export default async function HomePage() {
             </section>
 
             <HeroSlider />
-
-            <section className="section section-tight">
-                <div className="content-card home-intro-card">
-                    <div className="section-heading">
-                        <p className="section-kicker">Curadoria da loja</p>
-                        <h2>Moda feminina com vitrine viva, navegação simples e atendimento próximo.</h2>
-                        <p>
-                            Explore categorias em destaque, encontre as peças mais desejadas da coleção e finalize seu pedido com suporte rápido.
-                        </p>
-                    </div>
-                    <div className="home-intro-stats">
-                        <article className="highlight-item">
-                            <strong>{products.length}</strong>
-                            <span>produtos publicados</span>
-                        </article>
-                        <article className="highlight-item">
-                            <strong>{totalCategories}</strong>
-                            <span>categorias em navegação</span>
-                        </article>
-                        <article className="highlight-item">
-                            <strong>{totalPaymentMethods}</strong>
-                            <span>formas de pagamento exibidas</span>
-                        </article>
-                    </div>
-                </div>
-            </section>
 
             <section className="section">
                 <div className="section-heading align-center">
