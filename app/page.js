@@ -1,9 +1,7 @@
 import Link from "next/link";
 import { ContactForm } from "../components/contact-form";
 import { HeroSlider } from "../components/hero-slider";
-import { ProductGrid } from "../components/product-grid";
 import { benefits, contactHighlights, promotions } from "../data/store";
-import { getAllProducts } from "../lib/product-store";
 
 const newsletterFields = [
     { name: "name", label: "Seu nome", type: "text", placeholder: "Como podemos te chamar?" },
@@ -13,9 +11,6 @@ const newsletterFields = [
 export const revalidate = 300;
 
 export default async function HomePage() {
-    const products = await getAllProducts();
-    const featuredProducts = products.filter((product) => product.featured);
-
     return (
         <main>
             <section className="benefits-bar">
@@ -45,20 +40,6 @@ export default async function HomePage() {
                             </div>
                         </article>
                     ))}
-                </div>
-            </section>
-
-            <section className="section">
-                <div className="section-heading align-center">
-                    <p className="section-kicker">Coleção Golden Hour</p>
-                    <h2>Peças com visual leve, acabamento premium e caimento impecável</h2>
-                    <p>Selecionamos abaixo os itens que merecem mais destaque na vitrine e ajudam a acelerar a conversão.</p>
-                </div>
-                <ProductGrid items={featuredProducts} descriptionMode="overlay" />
-                <div className="section-actions">
-                    <Link href="/produtos" className="secondary-button">
-                        Ver todos os produtos
-                    </Link>
                 </div>
             </section>
 
