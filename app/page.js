@@ -44,7 +44,7 @@ export default async function HomePage() {
             </section>
 
             <section className="section section-alt">
-                <div className="two-column">
+                <div className="two-column two-column-equal">
                     <div className="content-card">
                         <p className="section-kicker">Atendimento Vip</p>
                         <h2>Dúvidas? Fale com a nossa equipe</h2>

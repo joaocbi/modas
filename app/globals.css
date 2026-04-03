@@ -1198,6 +1198,15 @@ img {
     align-items: start;
 }
 
+.two-column-equal {
+    align-items: stretch;
+}
+
+.two-column-equal > .content-card,
+.two-column-equal > .contact-card {
+    height: 100%;
+}
+
 .content-card,
 .contact-card,
 .notice-card,
