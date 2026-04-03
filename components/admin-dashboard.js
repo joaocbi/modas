@@ -5,8 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 
 const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débito", "Boleto", "Mercado Pago"];
 const DEFAULT_PRODUCT_IMAGE = "/assets/product_1.jpg";
-const MAX_PRODUCT_IMAGES = 12;
-const MAX_PRODUCT_VIDEOS = 4;
+const MAX_PRODUCT_IMAGES = 20;
+const MAX_PRODUCT_VIDEOS = 1;
 const MAX_IMAGE_DIMENSION = 1400;
 const MAX_IMAGE_FILE_BYTES = 260 * 1024;
 const MAX_VIDEO_FILE_BYTES = 350 * 1024 * 1024;
