@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Script from "next/script";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildCartItemKey, clearCart, countCartItems, getCartItems, removeCartItem, setCartItems, subscribeToCart, updateCartItemQuantity } from "../lib/cart";
 
 function formatCurrency(value) {
@@ -41,6 +41,16 @@ function shouldClearCartAfterPayment(status) {
     return ["approved", "authorized"].includes(String(status || "").trim().toLowerCase());
 }
 
+function isFailurePaymentStatus(status) {
+    return ["rejected", "cancelled", "refunded", "charged_back"].includes(String(status || "").trim().toLowerCase());
+}
+
+function shouldPollPaymentStatus(payment) {
+    const normalizedMethod = String(payment?.method || "").trim().toLowerCase();
+    const normalizedStatus = String(payment?.status || "").trim().toLowerCase();
+    return normalizedMethod === "pix" && ["pending", "in_process"].includes(normalizedStatus) && Boolean(payment?.id);
+}
+
 function getStatusMessage(payment) {
     const normalizedStatus = String(payment?.status || "").trim().toLowerCase();
 
@@ -58,11 +68,18 @@ function getStatusMessage(payment) {
         return "Pagamento em análise pelo Mercado Pago.";
     }
 
-    if (normalizedStatus === "rejected") {
+    if (["rejected", "cancelled", "refunded", "charged_back"].includes(normalizedStatus)) {
         return "O pagamento foi recusado. Revise os dados e tente novamente.";
     }
 
     return "Pagamento processado. Acompanhe o status do pedido no painel administrativo.";
+}
+
+function getPaymentFeedback(payment) {
+    return {
+        message: getStatusMessage(payment),
+        tone: isFailurePaymentStatus(payment?.status) ? "error" : "success",
+    };
 }
 
 export function CheckoutPageClient({
@@ -85,6 +102,7 @@ export function CheckoutPageClient({
     const [errorMessage, setErrorMessage] = useState("");
     const [copiedPixCode, setCopiedPixCode] = useState(false);
     const [paymentResult, setPaymentResult] = useState(null);
+    const [isPollingPaymentStatus, setIsPollingPaymentStatus] = useState(false);
     const [sdkReady, setSdkReady] = useState(false);
     const [cardFormReady, setCardFormReady] = useState(false);
     const buyNowAppliedRef = useRef("");
@@ -239,8 +257,41 @@ export function CheckoutPageClient({
     useEffect(() => {
         setPaymentResult(null);
         setStatusMessage("");
+        setErrorMessage("");
         setCopiedPixCode(false);
+        setIsPollingPaymentStatus(false);
     }, [cartFingerprint]);
+
+    const applyPaymentResponse = useCallback((data) => {
+        if (!data?.payment) {
+            return;
+        }
+
+        setPaymentResult((currentValue) => ({
+            ...(currentValue || {}),
+            ...(data || {}),
+            order: data.order || currentValue?.order || null,
+            payment: {
+                ...(currentValue?.payment || {}),
+                ...(data.payment || {}),
+            },
+        }));
+
+        const feedback = getPaymentFeedback(data.payment);
+
+        if (feedback.tone === "error") {
+            setStatusMessage("");
+            setErrorMessage(feedback.message);
+        } else {
+            setStatusMessage(feedback.message);
+            setErrorMessage("");
+        }
+
+        if (shouldClearCartAfterPayment(data.payment.status)) {
+            clearCart();
+            setCartState([]);
+        }
+    }, []);
 
     useEffect(() => {
         if (
@@ -341,6 +392,64 @@ export function CheckoutPageClient({
         };
     }, [cartFingerprint, paymentConfig.cardEnabled, paymentConfig.publicKey, paymentMethod, resolvedItems.length, sdkReady, totalAmount]);
 
+    const polledPaymentId = paymentResult?.payment?.id || "";
+    const polledPaymentMethod = paymentResult?.payment?.method || "";
+    const polledPaymentStatus = paymentResult?.payment?.status || "";
+
+    useEffect(() => {
+        if (
+            !shouldPollPaymentStatus({
+                id: polledPaymentId,
+                method: polledPaymentMethod,
+                status: polledPaymentStatus,
+            })
+        ) {
+            setIsPollingPaymentStatus(false);
+            return undefined;
+        }
+
+        let isCancelled = false;
+        let intervalId = null;
+
+        async function loadPaymentStatus() {
+            try {
+                const response = await fetch(`/api/payments/mercado-pago/payment/${polledPaymentId}`, {
+                    cache: "no-store",
+                });
+                const data = await response.json();
+
+                if (isCancelled || !response.ok || !data.ok || !data.payment) {
+                    return;
+                }
+
+                console.log("[Checkout] Payment status refreshed.", data);
+                applyPaymentResponse(data);
+
+                if (!shouldPollPaymentStatus(data.payment)) {
+                    setIsPollingPaymentStatus(false);
+
+                    if (intervalId) {
+                        window.clearInterval(intervalId);
+                    }
+                }
+            } catch (error) {
+                console.log("[Checkout] Failed to refresh payment status.", error);
+            }
+        }
+
+        setIsPollingPaymentStatus(true);
+        loadPaymentStatus();
+        intervalId = window.setInterval(loadPaymentStatus, 5000);
+
+        return () => {
+            isCancelled = true;
+
+            if (intervalId) {
+                window.clearInterval(intervalId);
+            }
+        };
+    }, [applyPaymentResponse, polledPaymentId, polledPaymentMethod, polledPaymentStatus]);
+
     function updateCustomerField(fieldName, value) {
         setCustomer((currentValue) => ({
             ...currentValue,
@@ -411,13 +520,7 @@ export function CheckoutPageClient({
             }
 
             console.log("[Checkout] Payment created.", data);
-            setPaymentResult(data);
-            setStatusMessage(getStatusMessage(data.payment));
-
-            if (shouldClearCartAfterPayment(data.payment.status)) {
-                clearCart();
-                setCartState([]);
-            }
+            applyPaymentResponse(data);
         } catch (error) {
             console.log("[Checkout] Payment request failed.", error);
             setErrorMessage(error.message || "Nao foi possivel concluir o pagamento.");
@@ -573,6 +676,9 @@ export function CheckoutPageClient({
                                                         {copiedPixCode ? "Copiado" : "Copiar codigo Pix"}
                                                     </button>
                                                 </div>
+                                                {isPollingPaymentStatus ? (
+                                                    <p className="checkout-helper">Aguardando confirmacao automatica do Pix. Esta pagina atualiza o status a cada poucos segundos.</p>
+                                                ) : null}
                                             </div>
                                         ) : null}
                                     </div>

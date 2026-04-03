@@ -55,6 +55,12 @@ NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY=
 MERCADO_PAGO_WEBHOOK_SECRET=
 ```
 
+Optional payment e-mail notifications:
+
+```env
+PAYMENT_EMAIL_FROM=
+```
+
 Observações:
 
 - Sem `DATABASE_URL`, o projeto usa os arquivos em `data/*.json` como fallback local.
@@ -62,6 +68,7 @@ Observações:
 - Sem `MERCADO_PAGO_ACCESS_TOKEN`, o checkout direto com `Pix` e `cartão` fica desativado.
 - Sem `NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY`, o checkout com cartão fica desativado, mas `Pix` ainda pode funcionar se o token estiver presente.
 - `MERCADO_PAGO_WEBHOOK_SECRET` é opcional, mas recomendado para validar a assinatura do webhook do Mercado Pago.
+- `PAYMENT_EMAIL_FROM` reuses `RESEND_API_KEY` to send payment approval or rejection updates to the customer by e-mail.
 - Em produção na Vercel, o preset do projeto está fixado em `Next.js` também por `vercel.json`.
 
 ## Scripts
@@ -109,6 +116,8 @@ O checkout direto foi integrado na página `carrinho` com:
 - `Pix` gerando QR code e código copia e cola
 - `cartão` com tokenização segura via `MercadoPago.js`
 - `webhook` em `/api/payments/mercado-pago/webhook`
+- polling em `/api/payments/mercado-pago/payment/:paymentId` para atualizar o status do Pix na tela
+- notificações automáticas por e-mail quando o pagamento é aprovado ou recusado
 
 Fluxo:
 

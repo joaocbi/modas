@@ -22,7 +22,7 @@ export const navigation = [
 
 export const benefits = [
     { title: "Frete grátis", description: "Condições especiais para pedidos selecionados." },
-    { title: "Trocas grátis", description: "Atendimento rápido para ajustes e trocas." },
+    { title: "Cartão de Crédito", description: "Até 4 vezes sem juros" },
     { title: "Desconto no Pix", description: "Condições diferenciadas para pagamentos à vista." },
 ];
 

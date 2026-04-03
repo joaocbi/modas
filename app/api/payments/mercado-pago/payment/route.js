@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createOrder, updateOrder } from "../../../../../lib/order-store";
 import { getAllProducts } from "../../../../../lib/product-store";
 import { createMercadoPagoPayment, getMercadoPagoPublicKey, isMercadoPagoConfigured } from "../../../../../lib/mercado-pago";
+import { serializeMercadoPagoPayment, syncMercadoPagoOrderWithPayment } from "../../../../../lib/mercado-pago-sync";
 
 function sanitizeDocument(value) {
     return String(value || "").replace(/\D+/g, "");
@@ -22,28 +23,6 @@ function splitCustomerName(value) {
         firstName,
         lastName: restNames.join(" ").trim(),
     };
-}
-
-function mapPaymentStatusToOrderStatus(status) {
-    const normalizedStatus = String(status || "").trim().toLowerCase();
-
-    if (normalizedStatus === "approved") {
-        return "paid";
-    }
-
-    if (normalizedStatus === "pending") {
-        return "pending_payment";
-    }
-
-    if (normalizedStatus === "in_process" || normalizedStatus === "authorized") {
-        return "processing_payment";
-    }
-
-    if (normalizedStatus === "cancelled" || normalizedStatus === "rejected" || normalizedStatus === "refunded" || normalizedStatus === "charged_back") {
-        return "payment_failed";
-    }
-
-    return "payment_pending_review";
 }
 
 function normalizeCartItems(items, products) {
@@ -212,6 +191,13 @@ export async function POST(request) {
             notification_url: buildNotificationUrl(request),
             statement_descriptor: "DEVILLE",
             payer: buildCustomerPayload(customer),
+            metadata: {
+                customerName: customer.name,
+                customerEmail: customer.email,
+                customerPhone: customer.phone,
+                orderId: String(createdOrder.id),
+                paymentMethod,
+            },
         };
 
         if (paymentMethod === "pix") {
@@ -231,34 +217,22 @@ export async function POST(request) {
         const payment = await createMercadoPagoPayment(paymentPayload, {
             idempotencyKey: crypto.randomUUID(),
         });
-
-        const nextStatus = mapPaymentStatusToOrderStatus(payment.status);
-        await updateOrder(createdOrder.id, {
-            status: nextStatus,
-        });
+        const syncResult = await syncMercadoPagoOrderWithPayment(payment);
 
         console.log("[MercadoPagoPayment] Payment created successfully.", {
             orderId: createdOrder.id,
             paymentId: payment.id,
             status: payment.status,
             paymentMethod,
+            notification: syncResult.notification,
         });
 
         return NextResponse.json({
             ok: true,
             order: {
-                ...createdOrder,
-                status: nextStatus,
+                ...(syncResult.order || createdOrder),
             },
-            payment: {
-                id: payment.id,
-                method: paymentMethod,
-                status: payment.status,
-                statusDetail: payment.status_detail,
-                qrCode: payment.point_of_interaction?.transaction_data?.qr_code || "",
-                qrCodeBase64: payment.point_of_interaction?.transaction_data?.qr_code_base64 || "",
-                ticketUrl: payment.transaction_details?.external_resource_url || "",
-            },
+            payment: serializeMercadoPagoPayment(payment),
         });
     } catch (error) {
         console.log("[MercadoPagoPayment] Failed to create payment.", error);

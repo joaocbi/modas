@@ -1,29 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { getMercadoPagoPayment, getMercadoPagoWebhookSecret } from "../../../../../lib/mercado-pago";
-import { getOrderById, updateOrder } from "../../../../../lib/order-store";
-
-function mapPaymentStatusToOrderStatus(status) {
-    const normalizedStatus = String(status || "").trim().toLowerCase();
-
-    if (normalizedStatus === "approved") {
-        return "paid";
-    }
-
-    if (normalizedStatus === "pending") {
-        return "pending_payment";
-    }
-
-    if (normalizedStatus === "in_process" || normalizedStatus === "authorized") {
-        return "processing_payment";
-    }
-
-    if (normalizedStatus === "cancelled" || normalizedStatus === "rejected" || normalizedStatus === "refunded" || normalizedStatus === "charged_back") {
-        return "payment_failed";
-    }
-
-    return "payment_pending_review";
-}
+import { syncMercadoPagoOrderWithPayment } from "../../../../../lib/mercado-pago-sync";
 
 function extractPaymentId(searchParams, body) {
     return (
@@ -143,33 +121,13 @@ export async function POST(request) {
         }
 
         const payment = await getMercadoPagoPayment(paymentId);
-        const orderId = Number(payment.external_reference || 0);
-
-        if (!orderId) {
-            return NextResponse.json({ ok: true, ignored: true });
-        }
-
-        const existingOrder = await getOrderById(orderId);
-
-        if (!existingOrder) {
-            return NextResponse.json({ ok: true, ignored: true });
-        }
-
-        const nextStatus = mapPaymentStatusToOrderStatus(payment.status);
-        const paymentMethod = String(payment.payment_method_id || "").trim().toLowerCase() === "pix" ? "pix" : "card";
-
-        await updateOrder(orderId, {
-            customer: existingOrder.customer,
-            total: Number(payment.transaction_amount || existingOrder.total),
-            status: nextStatus,
-            channel: `mercado_pago_${paymentMethod}`,
-            itemCount: existingOrder.itemCount,
-        });
+        const syncResult = await syncMercadoPagoOrderWithPayment(payment);
 
         console.log("[MercadoPagoWebhook] Order updated from webhook.", {
-            orderId,
+            orderId: syncResult.orderId,
             paymentId,
-            nextStatus,
+            nextStatus: syncResult.order?.status,
+            notification: syncResult.notification,
         });
 
         return NextResponse.json({ ok: true });
