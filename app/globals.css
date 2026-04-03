@@ -1207,6 +1207,16 @@ img {
     height: 100%;
 }
 
+.two-column-equal > .content-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.two-column-equal > .content-card .highlight-list,
+.two-column-equal > .contact-card .form-grid {
+    flex: 1;
+}
+
 .content-card,
 .contact-card,
 .notice-card,
