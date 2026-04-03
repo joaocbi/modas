@@ -351,8 +351,19 @@ img {
     gap: 12px;
 }
 
+.checkout-quantity-editor {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
 .checkout-quantity-row .field {
     max-width: 92px;
+}
+
+.checkout-quantity-button {
+    min-width: 44px;
+    padding: 0 14px;
 }
 
 .checkout-total-row {

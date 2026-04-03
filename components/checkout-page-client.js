@@ -548,6 +548,29 @@ export function CheckoutPageClient({
         }
     }
 
+    function changeCartItemQuantity(itemKey, nextQuantity) {
+        updateCartItemQuantity(itemKey, Math.max(1, Number(nextQuantity || 1)));
+    }
+
+    function handleClearCart() {
+        if (!resolvedItems.length || hasLockedPayment) {
+            return;
+        }
+
+        const shouldClear = window.confirm("Deseja limpar todos os itens do carrinho?");
+
+        if (!shouldClear) {
+            return;
+        }
+
+        console.log("[Checkout] Clearing cart from summary actions.");
+        clearCart();
+        setCartState([]);
+        setStatusMessage("");
+        setErrorMessage("");
+        setPaymentResult(null);
+    }
+
     return (
         <>
             <Script src="https://sdk.mercadopago.com/js/v2" strategy="afterInteractive" onLoad={() => setSdkReady(true)} />
@@ -758,20 +781,39 @@ export function CheckoutPageClient({
                                                     {item.selectedColor || "Cor padrao"} • {item.selectedSize || "Tamanho padrao"}
                                                 </span>
                                                 <span>{formatCurrency(item.product.price)} cada</span>
+                                                <span>Edite a quantidade ou exclua o item abaixo.</span>
                                                 <div className="checkout-quantity-row">
-                                                    <label className="field">
-                                                        <span>Qtd.</span>
-                                                        <input
-                                                            type="number"
-                                                            min="1"
-                                                            value={item.quantity}
-                                                            onChange={(event) => updateCartItemQuantity(item.key, event.target.value)}
+                                                    <div className="checkout-quantity-editor">
+                                                        <button
+                                                            type="button"
+                                                            className="secondary-button checkout-quantity-button"
+                                                            onClick={() => changeCartItemQuantity(item.key, item.quantity - 1)}
+                                                            disabled={hasLockedPayment || item.quantity <= 1}
+                                                        >
+                                                            -
+                                                        </button>
+                                                        <label className="field">
+                                                            <span>Qtd.</span>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                value={item.quantity}
+                                                                onChange={(event) => changeCartItemQuantity(item.key, event.target.value)}
+                                                                disabled={hasLockedPayment}
+                                                                inputMode="numeric"
+                                                            />
+                                                        </label>
+                                                        <button
+                                                            type="button"
+                                                            className="secondary-button checkout-quantity-button"
+                                                            onClick={() => changeCartItemQuantity(item.key, item.quantity + 1)}
                                                             disabled={hasLockedPayment}
-                                                            inputMode="numeric"
-                                                        />
-                                                    </label>
+                                                        >
+                                                            +
+                                                        </button>
+                                                    </div>
                                                     <button type="button" className="text-button" onClick={() => removeCartItem(item.key)} disabled={hasLockedPayment}>
-                                                        Remover
+                                                        Excluir
                                                     </button>
                                                 </div>
                                             </div>
@@ -807,6 +849,9 @@ export function CheckoutPageClient({
                                     <Link href="/produtos" className="secondary-button">
                                         Adicionar mais produtos
                                     </Link>
+                                    <button type="button" className="text-button" onClick={handleClearCart} disabled={!resolvedItems.length || hasLockedPayment}>
+                                        Limpar carrinho
+                                    </button>
                                 </div>
                             </article>
                         </aside>
