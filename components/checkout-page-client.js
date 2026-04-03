@@ -4,6 +4,7 @@ import Link from "next/link";
 import Script from "next/script";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { buildCartItemKey, clearCart, countCartItems, getCartItems, removeCartItem, setCartItems, subscribeToCart, updateCartItemQuantity } from "../lib/cart";
+import { calculateRemainingForFreeShipping, calculateShippingAmount, FREE_SHIPPING_THRESHOLD } from "../lib/shipping";
 
 function formatCurrency(value) {
     return new Intl.NumberFormat("pt-BR", {
@@ -240,10 +241,13 @@ export function CheckoutPageClient({
     }, []);
 
     const resolvedItems = useMemo(() => resolveCartProducts(initialProducts, cartItems), [initialProducts, cartItems]);
-    const totalAmount = useMemo(
+    const subtotalAmount = useMemo(
         () => Number(resolvedItems.reduce((total, item) => total + item.subtotal, 0).toFixed(2)),
         [resolvedItems]
     );
+    const shippingAmount = useMemo(() => calculateShippingAmount(subtotalAmount), [subtotalAmount]);
+    const remainingForFreeShipping = useMemo(() => calculateRemainingForFreeShipping(subtotalAmount), [subtotalAmount]);
+    const totalAmount = useMemo(() => Number((subtotalAmount + shippingAmount).toFixed(2)), [shippingAmount, subtotalAmount]);
     const totalItems = useMemo(() => countCartItems(cartItems), [cartItems]);
     const cartFingerprint = useMemo(
         () => resolvedItems.map((item) => `${item.key}:${item.quantity}`).join("|"),
@@ -777,7 +781,25 @@ export function CheckoutPageClient({
                                 </div>
 
                                 <div className="checkout-total-row">
-                                    <span>Total</span>
+                                    <span>Subtotal</span>
+                                    <strong>{formatCurrency(subtotalAmount)}</strong>
+                                </div>
+
+                                <div className="checkout-total-row">
+                                    <span>Frete Sedex</span>
+                                    <strong>{shippingAmount === 0 ? "Gratis" : formatCurrency(shippingAmount)}</strong>
+                                </div>
+
+                                {shippingAmount > 0 ? (
+                                    <p className="checkout-helper">
+                                        Faltam {formatCurrency(remainingForFreeShipping)} para liberar frete gratis acima de {formatCurrency(FREE_SHIPPING_THRESHOLD)}. Ate la, o frete unico via Sedex e de {formatCurrency(shippingAmount)}.
+                                    </p>
+                                ) : (
+                                    <p className="checkout-helper">Voce liberou o frete gratis para esta compra.</p>
+                                )}
+
+                                <div className="checkout-total-row">
+                                    <span>Total com frete</span>
                                     <strong>{formatCurrency(totalAmount)}</strong>
                                 </div>
 

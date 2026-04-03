@@ -3,6 +3,7 @@ import { createOrder, updateOrder } from "../../../../../lib/order-store";
 import { getAllProducts } from "../../../../../lib/product-store";
 import { createMercadoPagoPayment, getMercadoPagoPublicKey, isMercadoPagoConfigured } from "../../../../../lib/mercado-pago";
 import { serializeMercadoPagoPayment, syncMercadoPagoOrderWithPayment } from "../../../../../lib/mercado-pago-sync";
+import { calculateShippingAmount } from "../../../../../lib/shipping";
 
 function sanitizeDocument(value) {
     return String(value || "").replace(/\D+/g, "");
@@ -149,7 +150,9 @@ export async function POST(request) {
             );
         }
 
-        const totalAmount = calculateOrderTotal(normalizedItems);
+        const subtotalAmount = calculateOrderTotal(normalizedItems);
+        const shippingAmount = calculateShippingAmount(subtotalAmount);
+        const totalAmount = Number((subtotalAmount + shippingAmount).toFixed(2));
         const itemCount = normalizedItems.reduce((total, item) => total + item.quantity, 0);
         const paymentMethod = String(payload.paymentMethod).trim();
         const customer = {
@@ -180,6 +183,8 @@ export async function POST(request) {
         console.log("[MercadoPagoPayment] Order created for checkout.", {
             orderId: createdOrder.id,
             paymentMethod,
+            subtotalAmount,
+            shippingAmount,
             totalAmount,
             itemCount,
         });
@@ -197,6 +202,8 @@ export async function POST(request) {
                 customerPhone: customer.phone,
                 orderId: String(createdOrder.id),
                 paymentMethod,
+                subtotalAmount: subtotalAmount.toFixed(2),
+                shippingAmount: shippingAmount.toFixed(2),
             },
         };
 

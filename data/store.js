@@ -21,9 +21,9 @@ export const navigation = [
 ];
 
 export const benefits = [
-    { title: "Frete grátis", description: "Condições especiais para pedidos selecionados." },
+    { title: "Frete grátis", description: "Para compras acima de 800,00" },
     { title: "Cartão de Crédito", description: "Até 4 vezes sem juros" },
-    { title: "Desconto no Pix", description: "Condições diferenciadas para pagamentos à vista." },
+    { title: "Pedido minimo", description: "O valor para Pedido Minino é de R$400,00" },
 ];
 
 export const heroSlides = [
