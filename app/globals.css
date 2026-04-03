@@ -1317,13 +1317,14 @@ img {
 }
 
 .faq-item.is-open .faq-answer {
-    max-height: 220px;
+    max-height: 900px;
     padding: 0 24px 22px;
 }
 
 .faq-answer p {
     margin: 0;
     color: var(--color-text-muted);
+    white-space: pre-line;
 }
 
 .timeline {

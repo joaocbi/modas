@@ -80,8 +80,25 @@ export const exchangeSections = [
 
 export const faqItems = [
     {
-        question: "Como faço para comprar?",
-        answer: "Você pode navegar pela coleção, escolher a peça desejada e falar com a equipe pelo WhatsApp para concluir o atendimento de forma rápida.",
+        question: "Sobre Nós",
+        answer: `Sobre Nós – Deville Fashion Moda e Acessórios
+
+A Deville Fashion Moda e Acessórios é uma loja online fundada em 2010, criada com o propósito de levar estilo, elegância e praticidade até você, onde quer que esteja.
+
+Com atuação digital e atendimento ágil, oferecemos uma curadoria especial de produtos que acompanham as principais tendências da moda, sempre prezando pela qualidade e bom gosto.
+
+Nosso catálogo inclui:
+
+Moda masculina e feminina
+Acessórios modernos e versáteis
+Joias sofisticadas
+Relógios elegantes para todas as ocasiões
+
+Mesmo sendo uma loja online, nosso compromisso é proporcionar uma experiência de compra segura, prática e confiável. Trabalhamos com transparência, atenção aos detalhes e foco total na satisfação dos nossos clientes.
+
+Desde o início, buscamos unir moda e acessibilidade, levando até você peças que valorizam seu estilo e elevam sua autoestima.
+
+Deville Fashion não é apenas uma loja - é um espaço digital pensado para quem ama se vestir bem e expressar sua identidade com elegância.`,
     },
     {
         question: "Entrega",
