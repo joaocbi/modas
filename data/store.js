@@ -84,12 +84,35 @@ export const faqItems = [
         answer: "Você pode navegar pela coleção, escolher a peça desejada e falar com a equipe pelo WhatsApp para concluir o atendimento de forma rápida.",
     },
     {
-        question: "Vocês fazem troca por tamanho?",
-        answer: "Sim. Trocas por tamanho ou preferência podem ser solicitadas em até 7 dias corridos após o recebimento, com o produto sem uso.",
+        question: "Entrega",
+        answer: `CORREIOS
+
+Nessa modalidade de entrega, não conseguimos alterar o valor do frete calculado no site. São duas opções de envio: Sedex e PAC para fretes gratis.
+
+Não somos responsáveis pelo prazo de nenhuma das duas opções depois que despachado (o prazo fica disponível na hora da compra). O prazo de entrega começa a contar após a postagem da encomenda.
+
+Endereço inválido, dados incompletos, local não encontrado, após a 2ª (segunda) tentativa de entrega, caso não haja alguém para receber, os Correios devolvem o pedido para o nosso Centro de distribuição.
+
+Para que o pedido seja enviado novamente, será cobrada uma taxa com o mesmo valor do frete para envio do produto novamente. A mesma situação vale para frete grátis.
+Obs: Entregas com frete grátis serão enviadas via PAC.`,
     },
     {
         question: "Quais formas de pagamento vocês aceitam?",
-        answer: "Trabalhamos com Pix e cartão de crédito, com condições especiais para pagamentos à vista conforme a campanha vigente.",
+        answer: `CARTÃO DE CREDITO
+
+Aceitamos os cartões de crédito Visa, MasterCard, Amex, Diners Club e Elo.
+As compras podem ser parceladas nos cartões de crédito em até 4x sem juros.
+
+PIX
+
+O PIX é um modo de pagamento, disponível sete dias por semana, 24h por dia, de forma on-line e instantânea, no qual a transação ocorre em até 10 segundos.
+Se a compra for feita utilizando o computador, basta escanear o QR Code usando o aplicativo do seu banco ou carteira digital.
+Caso a compra esteja sendo feita pelo celular, copie o código gerado e cole no aplicativo do seu banco ou carteira digital (“Pagar” > “Pix Copia e Cola”).
+
+A chave do PIX copia e cola expira em 60 minutos.
+Caso deseje pagar metade no PIX e metade no cartão, entre em contato com o nosso suporte para te auxiliar.
+Pagamentos no PIX possuem 3% de desconto.
+Por medidas de segurança, é terminantemente proibido fazer qualquer outra forma de pagamento sem contactar nosso suporte.`,
     },
 ];
 
