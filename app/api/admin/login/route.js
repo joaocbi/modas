@@ -87,12 +87,17 @@ export async function POST(request) {
 
         const { email, password } = await request.json();
         const normalizedEmail = String(email || "").trim().toLowerCase();
-        const normalizedPassword = String(password || "");
+        // Trim to match env values that may have accidental spaces when pasted in the host dashboard.
+        const normalizedPassword = String(password || "").trim();
+        const expectedEmail = String(process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+        const expectedPassword = String(process.env.ADMIN_PASSWORD || "").trim();
 
-        if (
-            normalizedEmail !== String(process.env.ADMIN_EMAIL || "").trim().toLowerCase() ||
-            normalizedPassword !== String(process.env.ADMIN_PASSWORD || "")
-        ) {
+        if (normalizedEmail !== expectedEmail || normalizedPassword !== expectedPassword) {
+            console.log("[AdminAuth] Login rejected.", {
+                emailMatches: normalizedEmail === expectedEmail,
+                configuredEmailSet: Boolean(expectedEmail),
+                configuredPasswordSet: Boolean(expectedPassword),
+            });
             registerFailedAttempt(clientIdentifier);
             return NextResponse.json(
                 {
