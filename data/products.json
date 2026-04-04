@@ -103,7 +103,7 @@
     "subcategory": "Festa",
     "sizes": ["M", "G"],
     "colors": ["Marsala"],
-    "images": ["/assets/product_1.jpg"],
+    "images": ["/assets/product_4.jpg"],
     "paymentMethods": ["Pix", "Cartão de crédito", "Mercado Pago"],
     "price": 189.9,
     "oldPrice": 229.9,
@@ -113,7 +113,7 @@
     "mercadoPagoEnabled": false,
     "mercadoPagoLink": "",
     "badge": "Novo",
-    "image": "/assets/product_1.jpg",
+    "image": "/assets/product_4.jpg",
     "featured": false
   }
 ]

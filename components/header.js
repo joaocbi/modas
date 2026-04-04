@@ -54,7 +54,7 @@ export function Header() {
                     <span className="brand-mark">D</span>
                     <span className="brand-copy">
                         <span className="brand-name">DeVille Fashion</span>
-                        <span className="brand-subtitle">MODAS E ACESSORIOS</span>
+                        <span className="brand-subtitle">MODAS E ACESSÓRIOS</span>
                     </span>
                 </Link>
 

@@ -24,7 +24,7 @@ export const navigation = [
 export const benefits = [
     { title: "Frete grátis", description: "Para compras acima de 800,00" },
     { title: "Cartão de Crédito", description: "Até 4 vezes sem juros" },
-    { title: "Pedido minimo", description: "O valor para Pedido Minino é de R$400,00" },
+    { title: "Pedido mínimo", description: "O valor para pedido mínimo é de R$ 400,00" },
 ];
 
 export const heroSlides = [
@@ -84,7 +84,7 @@ export const faqItems = [
         question: "Entrega",
         answer: `CORREIOS
 
-Nessa modalidade de entrega, não conseguimos alterar o valor do frete calculado no site. São duas opções de envio: Sedex e PAC para fretes gratis.
+Nessa modalidade de entrega, não conseguimos alterar o valor do frete calculado no site. São duas opções de envio: Sedex e PAC para fretes grátis.
 
 Não somos responsáveis pelo prazo de nenhuma das duas opções depois que despachado (o prazo fica disponível na hora da compra). O prazo de entrega começa a contar após a postagem da encomenda.
 
@@ -95,7 +95,7 @@ Obs: Entregas com frete grátis serão enviadas via PAC.`,
     },
     {
         question: "Quais formas de pagamento vocês aceitam?",
-        answer: `CARTÃO DE CREDITO
+        answer: `CARTÃO DE CRÉDITO
 
 Aceitamos os cartões de crédito Visa, MasterCard, Amex, Diners Club e Elo.
 As compras podem ser parceladas nos cartões de crédito em até 4x sem juros.
@@ -109,7 +109,7 @@ Caso a compra esteja sendo feita pelo celular, copie o código gerado e cole no 
 A chave do PIX copia e cola expira em 60 minutos.
 Caso deseje pagar metade no PIX e metade no cartão, entre em contato com o nosso suporte para te auxiliar.
 Pagamentos no PIX possuem 3% de desconto.
-Por medidas de segurança, é terminantemente proibido fazer qualquer outra forma de pagamento sem contactar nosso suporte.`,
+Por medidas de segurança, é terminantemente proibido usar qualquer outra forma de pagamento sem falar com nosso suporte.`,
     },
 ];
 
