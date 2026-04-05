@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { heroSlides, store } from "../data/store";
 
 export function HeroSlider() {
     const [activeIndex, setActiveIndex] = useState(0);
+    const videoRefs = useRef([]);
 
     useEffect(() => {
         const intervalId = window.setInterval(() => {
@@ -15,6 +16,29 @@ export function HeroSlider() {
 
         return () => window.clearInterval(intervalId);
     }, []);
+
+    useEffect(() => {
+        videoRefs.current.forEach((videoEl, index) => {
+            if (!videoEl) return;
+            if (index === activeIndex) {
+                videoEl.play().catch((err) => {
+                    console.debug("[HeroSlider] autoplay blocked or failed for slide", index, slideSrc(videoEl), err);
+                });
+                console.debug("[HeroSlider] playing slide", index, slideSrc(videoEl));
+            } else {
+                videoEl.pause();
+                console.debug("[HeroSlider] paused slide", index, slideSrc(videoEl));
+            }
+        });
+    }, [activeIndex]);
+
+    function slideSrc(videoEl) {
+        return videoEl?.currentSrc || videoEl?.src || "";
+    }
+
+    function setVideoRef(index, el) {
+        videoRefs.current[index] = el;
+    }
 
     function goToSlide(step) {
         setActiveIndex((currentIndex) => (currentIndex + step + heroSlides.length) % heroSlides.length);
@@ -28,16 +52,20 @@ export function HeroSlider() {
         <section className="hero-section">
             {heroSlides.map((slide, index) => (
                 <div
-                    key={slide.image}
+                    key={slide.video}
                     className={`hero-slide ${index === activeIndex ? "is-active" : ""}`}
-                    style={{
-                        backgroundImage: `linear-gradient(90deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.15)), url(${slide.image})`,
-                        backgroundSize: "100% 100%, contain",
-                        backgroundPosition: "center, right center",
-                        backgroundRepeat: "no-repeat, no-repeat",
-                        backgroundColor: "#1f1a16",
-                    }}
                 >
+                    <video
+                        ref={(el) => setVideoRef(index, el)}
+                        className="hero-slide-video"
+                        src={slide.video}
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        aria-hidden
+                    />
+                    <div className="hero-slide-overlay" aria-hidden />
                     <div className="hero-content">
                         <p className="section-kicker">{slide.eyebrow}</p>
                         <h1>{slide.title}</h1>
@@ -69,7 +97,7 @@ export function HeroSlider() {
             <div className="hero-dots" aria-label="Indicadores do slider">
                 {heroSlides.map((slide, index) => (
                     <button
-                        key={slide.image}
+                        key={slide.video}
                         type="button"
                         className={`hero-dot ${index === activeIndex ? "is-active" : ""}`}
                         onClick={() => goToSlideIndex(index)}
