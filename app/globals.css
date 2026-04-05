@@ -641,6 +641,9 @@ img {
     object-position: right center;
     z-index: 0;
     pointer-events: none;
+    /* iOS Safari: promote compositor layer to avoid black / missing first frames */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 .hero-slide-overlay {

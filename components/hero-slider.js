@@ -7,7 +7,8 @@ import { heroSlides, store } from "../data/store";
 
 export function HeroSlider() {
     const [activeIndex, setActiveIndex] = useState(0);
-    const videoRefs = useRef([]);
+    const videoRef = useRef(null);
+    const activeSlide = heroSlides[activeIndex];
 
     useEffect(() => {
         const intervalId = window.setInterval(() => {
@@ -17,80 +18,82 @@ export function HeroSlider() {
         return () => window.clearInterval(intervalId);
     }, []);
 
+    // Single video instance: iOS Safari often fails to decode/play when multiple <video> nodes exist (inactive slides at opacity 0).
     useEffect(() => {
-        videoRefs.current.forEach((videoEl, index) => {
-            if (!videoEl) return;
-            if (index === activeIndex) {
-                videoEl.play().catch((err) => {
-                    console.debug("[HeroSlider] autoplay blocked or failed for slide", index, slideSrc(videoEl), err);
+        const videoEl = videoRef.current;
+        if (!videoEl) {
+            console.debug("[HeroSlider] no video ref yet for slide", activeIndex);
+            return undefined;
+        }
+
+        videoEl.muted = true;
+        videoEl.defaultMuted = true;
+        videoEl.setAttribute("playsinline", "");
+        videoEl.setAttribute("webkit-playsinline", "");
+
+        function tryPlay() {
+            const playResult = videoEl.play();
+            if (playResult && typeof playResult.then === "function") {
+                playResult.catch((err) => {
+                    console.debug("[HeroSlider] play() rejected", { activeIndex, src: videoEl.currentSrc || videoEl.src, err });
                 });
-                console.debug("[HeroSlider] playing slide", index, slideSrc(videoEl));
-            } else {
-                videoEl.pause();
-                console.debug("[HeroSlider] paused slide", index, slideSrc(videoEl));
             }
-        });
+        }
+
+        if (videoEl.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+            tryPlay();
+        } else {
+            videoEl.addEventListener("canplay", tryPlay, { once: true });
+        }
+
+        return () => {
+            videoEl.removeEventListener("canplay", tryPlay);
+        };
     }, [activeIndex]);
-
-    function slideSrc(videoEl) {
-        return videoEl?.currentSrc || videoEl?.src || "";
-    }
-
-    function setVideoRef(index, el) {
-        videoRefs.current[index] = el;
-    }
-
-    function goToSlide(step) {
-        setActiveIndex((currentIndex) => (currentIndex + step + heroSlides.length) % heroSlides.length);
-    }
-
-    function goToSlideIndex(nextIndex) {
-        setActiveIndex(nextIndex);
-    }
 
     return (
         <section className="hero-section">
-            {heroSlides.map((slide, index) => (
-                <div
-                    key={slide.video}
-                    className={`hero-slide ${index === activeIndex ? "is-active" : ""}`}
-                >
-                    <video
-                        ref={(el) => setVideoRef(index, el)}
-                        className="hero-slide-video"
-                        src={slide.video}
-                        muted
-                        loop
-                        playsInline
-                        preload="auto"
-                        aria-hidden
-                    />
-                    <div className="hero-slide-overlay" aria-hidden />
-                    <div className="hero-content">
-                        <p className="section-kicker">{slide.eyebrow}</p>
-                        <h1>{slide.title}</h1>
-                        <p>{slide.description}</p>
-                        <div className="hero-actions">
-                            <Link href="/produtos" className="primary-button">
-                                Ver produtos
-                            </Link>
-                            <a
-                                href={`https://wa.me/${store.whatsapp}?text=Olá, quero atendimento com consultor da DeVille Fashion.`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="secondary-button"
-                            >
-                                Falar no WhatsApp
-                            </a>
-                        </div>
+            <div className="hero-slide is-active">
+                <video
+                    key={activeSlide.video}
+                    ref={videoRef}
+                    className="hero-slide-video"
+                    src={activeSlide.video}
+                    muted
+                    defaultMuted
+                    loop
+                    playsInline
+                    autoPlay
+                    preload="auto"
+                    controls={false}
+                    disablePictureInPicture
+                    aria-hidden
+                />
+                <div className="hero-slide-overlay" aria-hidden />
+                <div className="hero-content">
+                    <p className="section-kicker">{activeSlide.eyebrow}</p>
+                    <h1>{activeSlide.title}</h1>
+                    <p>{activeSlide.description}</p>
+                    <div className="hero-actions">
+                        <Link href="/produtos" className="primary-button">
+                            Ver produtos
+                        </Link>
+                        <a
+                            href={`https://wa.me/${store.whatsapp}?text=Olá, quero atendimento com consultor da DeVille Fashion.`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="secondary-button"
+                        >
+                            Falar no WhatsApp
+                        </a>
                     </div>
                 </div>
-            ))}
+            </div>
 
-            <button type="button" className="slider-button slider-button-left" onClick={() => goToSlide(-1)} aria-label="Slide anterior">
+            <button type="button" className="slider-button slider-button-left" onClick={() => setActiveIndex((i) => (i - 1 + heroSlides.length) % heroSlides.length)} aria-label="Slide anterior">
                 <ChevronLeft size={20} />
             </button>
-            <button type="button" className="slider-button slider-button-right" onClick={() => goToSlide(1)} aria-label="Próximo slide">
+            <button type="button" className="slider-button slider-button-right" onClick={() => setActiveIndex((i) => (i + 1) % heroSlides.length)} aria-label="Próximo slide">
                 <ChevronRight size={20} />
             </button>
 
@@ -100,7 +103,7 @@ export function HeroSlider() {
                         key={slide.video}
                         type="button"
                         className={`hero-dot ${index === activeIndex ? "is-active" : ""}`}
-                        onClick={() => goToSlideIndex(index)}
+                        onClick={() => setActiveIndex(index)}
                         aria-label={`Ir para o slide ${index + 1}`}
                     />
                 ))}
