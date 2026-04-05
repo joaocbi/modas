@@ -62,7 +62,7 @@ export function HeroSlider() {
                         muted
                         loop
                         playsInline
-                        preload="metadata"
+                        preload="auto"
                         aria-hidden
                     />
                     <div className="hero-slide-overlay" aria-hidden />
