@@ -609,8 +609,8 @@ img {
 .hero-section {
     position: relative;
     width: min(calc(100% - 32px), var(--max-width));
-    /* Slightly shorter block so media is not overwhelmingly tall */
-    min-height: clamp(440px, 48vw, 560px);
+    /* Enough height so headline + actions are not clipped */
+    min-height: clamp(520px, 56vw, 640px);
     margin: 24px auto 0;
     border-radius: 36px;
     overflow: hidden;
@@ -634,24 +634,21 @@ img {
     inset: 0;
     width: 100%;
     height: 100%;
-    /* Match previous hero images: show full frame, right-aligned — less upscale blur than cover */
-    object-fit: contain;
+    min-width: 100%;
+    min-height: 100%;
+    /* Cover fills the frame so media is always visible (contain left large empty bars) */
+    object-fit: cover;
     object-position: right center;
     z-index: 0;
+    pointer-events: none;
 }
 
 .hero-slide-overlay {
     position: absolute;
     inset: 0;
     z-index: 1;
-    /* Stronger dim only behind copy (left); keep right side clearer */
-    background: linear-gradient(
-        90deg,
-        rgba(0, 0, 0, 0.4) 0%,
-        rgba(0, 0, 0, 0.22) 38%,
-        rgba(0, 0, 0, 0.08) 62%,
-        rgba(0, 0, 0, 0.03) 100%
-    );
+    /* Readable text on the left; video stays visible on the right */
+    background: linear-gradient(90deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.28) 45%, rgba(0, 0, 0, 0.12) 100%);
     pointer-events: none;
 }
 
@@ -659,10 +656,9 @@ img {
     position: relative;
     z-index: 2;
     max-width: 540px;
-    padding: clamp(64px, 8vw, 100px) 56px;
+    padding: clamp(48px, 6vw, 80px) 56px clamp(40px, 5vw, 64px);
     color: #ffffff;
-    /* Keep type readable with a lighter overlay */
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 4px 28px rgba(0, 0, 0, 0.45);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 24px rgba(0, 0, 0, 0.35);
 }
 
 .hero-content h1,
@@ -674,7 +670,8 @@ img {
 }
 
 .hero-content h1 {
-    font-size: clamp(2.8rem, 5vw, 4.8rem);
+    font-size: clamp(2.1rem, 4vw, 3.5rem);
+    line-height: 1.1;
     margin-top: 12px;
 }
 
@@ -781,13 +778,16 @@ img {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
+    z-index: 4;
     width: 46px;
     height: 46px;
     border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    background: rgba(30, 26, 22, 0.55);
+    backdrop-filter: blur(6px);
     color: #ffffff;
     cursor: pointer;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 
 .slider-button-left {
@@ -805,7 +805,7 @@ img {
     transform: translateX(-50%);
     display: flex;
     gap: 10px;
-    z-index: 2;
+    z-index: 4;
 }
 
 .hero-dot {
