@@ -6,9 +6,9 @@
     --color-text-muted: #666666;
     --color-border: rgba(34, 34, 34, 0.08);
     --color-primary: #151515;
-    --color-brand-gold-mid: #c5a028;
-    --color-brand-gold-rich: #d4af37;
-    --color-brand-gold-deep: #7a5c10;
+    --color-brand-gold-mid: #a67c00;
+    --color-brand-gold-rich: #b8860b;
+    --color-brand-gold-deep: #5c4306;
     --color-accent: #8a8566;
     --color-accent-strong: #6f6b50;
     --color-success: #25d366;
@@ -121,24 +121,24 @@ img {
     color: var(--color-primary);
 }
 
-/* Metallic gold titling aligned with brand mark */
+/* Metallic gold titling: deeper tones for contrast on cream header */
 .brand-name--gold {
     background: linear-gradient(
         118deg,
-        #fff9e6 0%,
-        #f0dc82 18%,
-        var(--color-brand-gold-rich) 38%,
-        var(--color-brand-gold-mid) 48%,
-        var(--color-brand-gold-deep) 58%,
-        var(--color-brand-gold-rich) 72%,
-        #f5ead0 88%,
-        var(--color-brand-gold-mid) 100%
+        #d4a017 0%,
+        var(--color-brand-gold-rich) 14%,
+        var(--color-brand-gold-mid) 32%,
+        var(--color-brand-gold-deep) 48%,
+        #7a5c10 56%,
+        var(--color-brand-gold-mid) 72%,
+        var(--color-brand-gold-rich) 88%,
+        #8b6914 100%
     );
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35));
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.12));
 }
 
 .header-actions {

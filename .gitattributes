@@ -15,3 +15,6 @@
 *.jpg filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text
 *.png filter=lfs diff=lfs merge=lfs -text
+
+# Ship as normal Git blob: Vercel and many hosts do not run git lfs pull, so LFS PNGs deploy as tiny pointers and break in the browser.
+public/assets/logo-do-santos-market.png !filter !diff !merge
