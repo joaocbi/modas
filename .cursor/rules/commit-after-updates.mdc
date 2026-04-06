@@ -1,0 +1,35 @@
+---
+description: Auto commit and push after code changes; sync main for Vercel
+alwaysApply: true
+---
+
+# Commit and deploy after updates
+
+The user authorizes committing without asking again when finishing meaningful work in this repo.
+
+## When to commit
+
+After edits that touch application code, config used in production, or assets referenced by the app:
+
+1. Stage only intentional changes. Never stage `.env`, `.env.local`, `node_modules/`, `.next/`, or other ignored paths.
+2. Prefer `npm run ship -- "type: short message"` when many files changed (it runs safety checks). For a small, explicit set, `git add <paths>` then `git commit` is fine.
+3. Use clear messages, e.g. `feat:`, `fix:`, `chore:`, `style:`.
+
+## Push and Vercel
+
+This project’s GitHub default branch is **main**; work often lands on **master**. Vercel production follows **main**.
+
+After pushing **master**, always run:
+
+```bash
+git push origin master:main
+```
+
+so production (e.g. dosantosmarket.vercel.app) receives the same commits.
+
+## When not to commit
+
+- Work is half-done or broken on purpose.
+- Only local experiments or the user asked to hold changes.
+
+If nothing changed in tracked files, skip commit.
