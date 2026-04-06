@@ -2,7 +2,7 @@ import { Breadcrumb } from "../../components/breadcrumb";
 import { howToBuySteps } from "../../data/store";
 
 export const metadata = {
-    title: "Como comprar | DeVille Fashion",
+    title: "Como comprar | Do Santos Market",
 };
 
 export default function HowToBuyPage() {

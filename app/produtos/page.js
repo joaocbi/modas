@@ -3,7 +3,7 @@ import { ProductGrid } from "../../components/product-grid";
 import { getAllProducts } from "../../lib/product-store";
 
 export const metadata = {
-    title: "Produtos | DeVille Fashion",
+    title: "Produtos | Do Santos Market",
 };
 
 export const revalidate = 300;

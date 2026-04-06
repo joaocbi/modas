@@ -9,7 +9,7 @@ import { canStoreProductImages } from "../../lib/product-image-store";
 import { getAdminSession } from "../../lib/admin-session";
 
 export const metadata = {
-    title: "Admin | DeVille Fashion",
+    title: "Admin | Do Santos Market",
 };
 
 export const dynamic = "force-dynamic";

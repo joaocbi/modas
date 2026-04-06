@@ -3,7 +3,7 @@ import { FaqList } from "../../components/faq-list";
 import { faqItems } from "../../data/store";
 
 export const metadata = {
-    title: "Perguntas frequentes | DeVille Fashion",
+    title: "Perguntas frequentes | Do Santos Market",
 };
 
 export default function FaqPage() {

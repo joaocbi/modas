@@ -3,7 +3,7 @@ import { CheckoutPageClient } from "../../components/checkout-page-client";
 import { getAllProducts } from "../../lib/product-store";
 
 export const metadata = {
-    title: "Carrinho | DeVille Fashion",
+    title: "Carrinho | Do Santos Market",
 };
 
 export const revalidate = 300;

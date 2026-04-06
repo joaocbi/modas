@@ -16,7 +16,7 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata = {
-    title: "DeVille Fashion",
+    title: "Do Santos Market",
     description: "Moda feminina com curadoria elegante, atendimento próximo e compra facilitada por WhatsApp.",
     icons: {
         icon: "/icon.svg",
@@ -27,7 +27,7 @@ export const metadata = {
 };
 
 export default async function RootLayout({ children }) {
-    const whatsappHref = `https://wa.me/${store.whatsapp}?text=Olá, quero atendimento da DeVille Fashion.`;
+    const whatsappHref = `https://wa.me/${store.whatsapp}?text=Olá, quero atendimento da Do Santos Market.`;
     const productCategories = await getAllProductCategories();
 
     return (

@@ -61,7 +61,7 @@ export default async function HomePage() {
                         compact
                         title="Assine nossa newsletter"
                         description="Receba novidades e promoções em primeira mão pelo canal que preferir."
-                        subject="Interesse em receber novidades da DeVille Fashion"
+                        subject="Interesse em receber novidades da Do Santos Market"
                         fields={newsletterFields}
                     />
                 </div>

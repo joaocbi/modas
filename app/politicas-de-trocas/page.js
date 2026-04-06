@@ -2,7 +2,7 @@ import { Breadcrumb } from "../../components/breadcrumb";
 import { exchangeSections, store } from "../../data/store";
 
 export const metadata = {
-    title: "Políticas de trocas | DeVille Fashion",
+    title: "Políticas de trocas | Do Santos Market",
 };
 
 export default function ExchangePolicyPage() {

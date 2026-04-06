@@ -52,7 +52,7 @@ export function Footer() {
             </div>
 
             <div className="footer-bottom">
-                <p>© 2026 DeVille Fashion. Todos os direitos reservados.</p>
+                <p>© 2026 Do Santos Market. Todos os direitos reservados.</p>
             </div>
         </footer>
     );

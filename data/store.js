@@ -1,7 +1,7 @@
 import { buildWhatsAppUrl } from "../lib/contact";
 
 export const store = {
-    name: "DeVille Fashion",
+    name: "Do Santos Market",
     email: "devillefashions@gmail.com",
     whatsapp: "55042991628586",
     instagram: "#",

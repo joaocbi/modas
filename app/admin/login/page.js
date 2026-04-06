@@ -3,7 +3,7 @@ import { AdminLoginForm } from "../../../components/admin-login-form";
 import { getAdminSession, isAdminConfigured } from "../../../lib/admin-session";
 
 export const metadata = {
-    title: "Admin Login | DeVille Fashion",
+    title: "Admin Login | Do Santos Market",
 };
 
 export default async function AdminLoginPage() {

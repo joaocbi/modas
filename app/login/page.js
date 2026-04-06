@@ -14,7 +14,7 @@ const registerFields = [
 ];
 
 export const metadata = {
-    title: "Minha conta | DeVille Fashion",
+    title: "Minha conta | Do Santos Market",
 };
 
 export default function LoginPage() {

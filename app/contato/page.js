@@ -10,7 +10,7 @@ const contactFields = [
 ];
 
 export const metadata = {
-    title: "Contato | DeVille Fashion",
+    title: "Contato | Do Santos Market",
 };
 
 export default function ContactPage() {
@@ -45,7 +45,7 @@ export default function ContactPage() {
                     <ContactForm
                         title="Envie sua mensagem"
                         description="Preencha os dados abaixo e escolha o canal para continuar seu atendimento."
-                        subject="Contato pelo site DeVille Fashion"
+                        subject="Contato pelo site Do Santos Market"
                         fields={contactFields}
                     />
                 </div>

@@ -1,7 +1,7 @@
 import { Breadcrumb } from "../../components/breadcrumb";
 
 export const metadata = {
-    title: "Sobre Nós | DeVille Fashion",
+    title: "Sobre Nós | Do Santos Market",
 };
 
 export default function AboutPage() {
@@ -12,14 +12,14 @@ export default function AboutPage() {
                 <div className="section-heading align-center">
                     <p className="section-kicker">Nossa história</p>
                     <h1>Sobre Nós</h1>
-                    <p>Conheça a Deville Fashion Moda e Acessórios e o propósito por trás da nossa curadoria.</p>
+                    <p>Conheça a Do Santos Market Moda e Acessórios e o propósito por trás da nossa curadoria.</p>
                 </div>
 
                 <div className="content-list">
                     <article className="content-card">
-                        <h2>Sobre Nós - Deville Fashion Moda e Acessórios</h2>
+                        <h2>Sobre Nós - Do Santos Market Moda e Acessórios</h2>
                         <p>
-                            A Deville Fashion Moda e Acessórios é uma loja online fundada em 2010, criada com o propósito de
+                            A Do Santos Market Moda e Acessórios é uma loja online fundada em 2010, criada com o propósito de
                             levar estilo, elegância e praticidade até você, onde quer que esteja.
                         </p>
                         <p>
@@ -43,7 +43,7 @@ export default function AboutPage() {
                             estilo e elevam sua autoestima.
                         </p>
                         <p>
-                            Deville Fashion não é apenas uma loja - é um espaço digital pensado para quem ama se vestir bem
+                            Do Santos Market não é apenas uma loja - é um espaço digital pensado para quem ama se vestir bem
                             e expressar sua identidade com elegância.
                         </p>
                     </article>

@@ -194,7 +194,7 @@ export async function POST(request) {
             description: buildPaymentDescription(normalizedItems),
             external_reference: String(createdOrder.id),
             notification_url: buildNotificationUrl(request),
-            statement_descriptor: "DEVILLE",
+            statement_descriptor: "DOSANTOSMKT",
             payer: buildCustomerPayload(customer),
             metadata: {
                 customerName: customer.name,

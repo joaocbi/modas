@@ -1,7 +1,7 @@
 export default function manifest() {
     return {
-        name: "DeVille Fashion",
-        short_name: "DeVille",
+        name: "Do Santos Market",
+        short_name: "Do Santos",
         description: "Moda feminina com curadoria elegante e atendimento por WhatsApp.",
         start_url: "/",
         display: "standalone",
