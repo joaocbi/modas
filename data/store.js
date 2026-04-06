@@ -69,7 +69,7 @@ export const howToBuySteps = [
 export const exchangeSections = [
     {
         title: "Trocas por defeito",
-        description: "O prazo para solicitar troca por defeito é de até 30 dias corridos após o recebimento do produto.",
+        description: "O prazo para solicitar troca por defeito é de até 7 dias corridos após o recebimento do produto.",
         items: ["Troca pelo mesmo produto", "Crédito na loja", "Reembolso do valor pago"],
     },
     {
