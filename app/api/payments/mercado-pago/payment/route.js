@@ -137,7 +137,7 @@ export async function POST(request) {
             );
         }
 
-        const products = await getAllProducts();
+        const products = await getAllProducts({ forPublicStorefront: true });
         const normalizedItems = normalizeCartItems(payload.items, products);
 
         if (!normalizedItems.length) {

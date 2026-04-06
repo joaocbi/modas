@@ -10,7 +10,7 @@ export const revalidate = 300;
 
 export default async function CartPage({ searchParams }) {
     const resolvedSearchParams = await searchParams;
-    const products = await getAllProducts();
+    const products = await getAllProducts({ forPublicStorefront: true });
     const buyNowProductId = Number(resolvedSearchParams?.buyNow || 0) || null;
     const buyNowSize = String(resolvedSearchParams?.size || "").trim();
     const buyNowColor = String(resolvedSearchParams?.color || "").trim();

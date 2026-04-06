@@ -11,6 +11,7 @@ const MAX_IMAGE_DIMENSION = 1400;
 const MAX_IMAGE_FILE_BYTES = 260 * 1024;
 const MAX_VIDEO_FILE_BYTES = 350 * 1024 * 1024;
 const MAX_PRODUCT_REQUEST_BYTES = 4 * 1024 * 1024;
+const INTERNAL_NOTES_MAX_LENGTH = 1500;
 
 function normalizeClientImages(images) {
     return [...new Set((images || []).map((item) => String(item || "").trim()).filter(Boolean))].slice(0, MAX_PRODUCT_IMAGES);
@@ -288,6 +289,7 @@ function getEmptyProductForm() {
         images: [DEFAULT_PRODUCT_IMAGE],
         videos: [],
         featured: true,
+        internalNotes: "",
     };
 }
 
@@ -725,7 +727,11 @@ export function AdminDashboard({
     }
 
     function updateProductField(name, value) {
-        const normalizedValue = ["oldPrice", "costPrice", "salesFeePercentage"].includes(name) ? sanitizeDecimalInput(value) : value;
+        let normalizedValue = ["oldPrice", "costPrice", "salesFeePercentage"].includes(name) ? sanitizeDecimalInput(value) : value;
+
+        if (name === "internalNotes") {
+            normalizedValue = String(value ?? "").slice(0, INTERNAL_NOTES_MAX_LENGTH);
+        }
 
         setProductForm((current) => {
             let nextProductForm = { ...current, [name]: normalizedValue };
@@ -931,6 +937,7 @@ export function AdminDashboard({
             images: normalizedImages,
             videos: normalizeClientVideos(product.videos || []),
             featured: Boolean(product.featured),
+            internalNotes: String(product.internalNotes || "").slice(0, INTERNAL_NOTES_MAX_LENGTH),
         });
         setImagePreview(normalizedImages[0] || DEFAULT_PRODUCT_IMAGE);
         setIsProductModalOpen(true);
@@ -1970,6 +1977,20 @@ export function AdminDashboard({
                             <label className="field"><span>Tamanhos</span><input value={productForm.sizes} onChange={(event) => updateProductField("sizes", event.target.value)} placeholder="P, M, G" required disabled={!canManage} /></label>
                             <label className="field"><span>Cores</span><input value={productForm.colors} onChange={(event) => updateProductField("colors", event.target.value)} placeholder="Preto, Areia" required disabled={!canManage} /></label>
                             <label className="field field-full"><span>Descrição</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>
+                            <label className="field field-full">
+                                <span>Observações internas (máx. {INTERNAL_NOTES_MAX_LENGTH} caracteres, não aparecem na loja)</span>
+                                <textarea
+                                    value={productForm.internalNotes || ""}
+                                    onChange={(event) => updateProductField("internalNotes", event.target.value)}
+                                    rows={4}
+                                    maxLength={INTERNAL_NOTES_MAX_LENGTH}
+                                    placeholder="Notas só para a equipe: fornecedor, SKU, histórico de pedidos..."
+                                    disabled={!canManage}
+                                />
+                                <span className="admin-internal-notes-count" aria-live="polite">
+                                    {(productForm.internalNotes || "").length}/{INTERNAL_NOTES_MAX_LENGTH}
+                                </span>
+                            </label>
                             <AdminFormSection
                                 icon={FolderKanban}
                                 title="Precificação"

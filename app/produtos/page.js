@@ -14,7 +14,7 @@ function normalizeCategoryParam(value) {
 
 export default async function ProductsPage({ searchParams }) {
     const resolvedSearchParams = await searchParams;
-    const products = await getAllProducts();
+    const products = await getAllProducts({ forPublicStorefront: true });
     const selectedCategory = String(resolvedSearchParams?.categoria || "").trim();
     const filteredProducts = selectedCategory
         ? products.filter((product) => normalizeCategoryParam(product.category) === normalizeCategoryParam(selectedCategory))

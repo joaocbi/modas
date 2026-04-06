@@ -1955,6 +1955,13 @@ img {
     border-color: rgba(138, 133, 102, 0.35);
 }
 
+.admin-internal-notes-count {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+}
+
 .field-formula {
     font-weight: 600;
 }

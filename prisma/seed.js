@@ -79,6 +79,7 @@ async function main() {
                     badge: product.badge,
                     image: product.image,
                     featured: product.featured,
+                    internalNotes: String(product.internalNotes || "").slice(0, 1500),
                 },
             });
         }

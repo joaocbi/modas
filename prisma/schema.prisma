@@ -27,6 +27,7 @@ model Product {
   badge              String
   image              String
   featured           Boolean  @default(false)
+  internalNotes      String   @default("") @db.VarChar(1500)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 }
