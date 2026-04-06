@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { usePathname } from "next/navigation";
@@ -50,12 +51,18 @@ export function Header() {
                     <Search size={18} />
                 </button>
 
-                <Link href="/" className="brand">
-                    <span className="brand-mark">D</span>
-                    <span className="brand-copy">
-                        <span className="brand-name">Do Santos Market</span>
-                        <span className="brand-subtitle">MODAS E ACESSÓRIOS</span>
+                <Link href="/" className="brand" aria-label="Do Santos Market — início">
+                    <span className="brand-logo-wrap">
+                        <Image
+                            src="/assets/logo-do-santos-market.png"
+                            alt=""
+                            width={96}
+                            height={96}
+                            className="brand-logo"
+                            priority
+                        />
                     </span>
+                    <span className="brand-name brand-name--gold">Do Santos Market</span>
                 </Link>
 
                 <div className="header-actions">

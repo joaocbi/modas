@@ -6,6 +6,9 @@
     --color-text-muted: #666666;
     --color-border: rgba(34, 34, 34, 0.08);
     --color-primary: #151515;
+    --color-brand-gold-mid: #c5a028;
+    --color-brand-gold-rich: #d4af37;
+    --color-brand-gold-deep: #7a5c10;
     --color-accent: #8a8566;
     --color-accent-strong: #6f6b50;
     --color-success: #25d366;
@@ -82,48 +85,60 @@ img {
     gap: 16px;
 }
 
+/* font-size on .brand sets logo box (1em) and title to the same scale */
 .brand {
     display: inline-flex;
     align-items: center;
-    gap: 14px;
+    gap: 0.55em;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.04em;
+    font-size: clamp(1.35rem, 0.85rem + 2.1vw, 2.05rem);
 }
 
-.brand-copy {
-    display: inline-grid;
-    gap: 3px;
-}
-
-.brand-mark {
+.brand-logo-wrap {
+    flex-shrink: 0;
     display: grid;
     place-items: center;
-    width: 46px;
-    height: 46px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #f2df8e, #996515);
-    color: #ffffff;
-    box-shadow: 0 16px 32px rgba(153, 101, 21, 0.22);
+    width: 1em;
+    height: 1em;
+    border-radius: 0.22em;
+    overflow: hidden;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+}
+
+.brand-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .brand-name {
     font-family: var(--font-brand), Georgia, serif;
-    font-size: 1.18rem;
-    line-height: 1;
+    font-size: 1em;
+    line-height: 1.05;
     font-weight: 700;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     color: var(--color-primary);
 }
 
-.brand-subtitle {
-    display: inline-block;
-    width: fit-content;
-    max-width: 100%;
-    font-size: 0.58rem;
-    line-height: 1;
-    letter-spacing: 0.3em;
-    color: var(--color-text-muted);
-    text-transform: uppercase;
+/* Metallic gold titling aligned with brand mark */
+.brand-name--gold {
+    background: linear-gradient(
+        118deg,
+        #fff9e6 0%,
+        #f0dc82 18%,
+        var(--color-brand-gold-rich) 38%,
+        var(--color-brand-gold-mid) 48%,
+        var(--color-brand-gold-deep) 58%,
+        var(--color-brand-gold-rich) 72%,
+        #f5ead0 88%,
+        var(--color-brand-gold-mid) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.35));
 }
 
 .header-actions {
@@ -2226,8 +2241,8 @@ img {
         min-height: 76px;
     }
 
-    .brand-name {
-        font-size: 0.95rem;
+    .brand {
+        font-size: clamp(1.2rem, 0.75rem + 2.4vw, 1.65rem);
     }
 
     .main-nav {
