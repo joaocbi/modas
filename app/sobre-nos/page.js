@@ -17,9 +17,9 @@ export default function AboutPage() {
 
                 <div className="content-list">
                     <article className="content-card">
-                        <h2>Sobre Nós - Do Santos Market Moda e Acessórios</h2>
+                        <h2>Sobre Nós - Do Santos Market</h2>
                         <p>
-                            A Do Santos Market Moda e Acessórios é uma loja online fundada em 2010, criada com o propósito de
+                            A Do Santos Market é uma loja online fundada em 2022, criada com o propósito de
                             levar estilo, elegância e praticidade até você, onde quer que esteja.
                         </p>
                         <p>
