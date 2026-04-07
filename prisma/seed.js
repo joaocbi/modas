@@ -66,6 +66,8 @@ async function main() {
                     subcategory: product.subcategory,
                     sizes: product.sizes,
                     colors: product.colors,
+                    strapShoulderOptions: product.strapShoulderOptions || [],
+                    fabricPatternOptions: product.fabricPatternOptions || [],
                     images: product.images || [product.image],
                     videos: product.videos || [],
                     paymentMethods: product.paymentMethods,

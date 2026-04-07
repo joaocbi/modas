@@ -25,6 +25,8 @@ function ProductCard({ product, showDescription, descriptionMode }) {
     const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
     const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || "");
     const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "");
+    const strapShoulderOptions = Array.isArray(product.strapShoulderOptions) ? product.strapShoulderOptions : [];
+    const fabricPatternOptions = Array.isArray(product.fabricPatternOptions) ? product.fabricPatternOptions : [];
     const [selectedStrapShoulder, setSelectedStrapShoulder] = useState("");
     const [selectedFabricPattern, setSelectedFabricPattern] = useState("");
     const [cartFeedback, setCartFeedback] = useState("");
@@ -34,10 +36,10 @@ function ProductCard({ product, showDescription, descriptionMode }) {
     useEffect(() => {
         setSelectedSize(product.sizes?.[0] || "");
         setSelectedColor(product.colors?.[0] || "");
-        setSelectedStrapShoulder("");
-        setSelectedFabricPattern("");
+        setSelectedStrapShoulder(strapShoulderOptions[0] || "");
+        setSelectedFabricPattern(fabricPatternOptions[0] || "");
         setCartFeedback("");
-    }, [product.colors, product.id, product.sizes]);
+    }, [fabricPatternOptions, product.colors, product.id, product.sizes, strapShoulderOptions]);
 
     useEffect(() => {
         if (!isOverlayDescription || !isDescriptionVisible) {
@@ -231,24 +233,44 @@ function ProductCard({ product, showDescription, descriptionMode }) {
 
                         <label className="product-option-field">
                             <span>Cor da Correia/Ombro</span>
-                            <input
-                                type="text"
-                                value={selectedStrapShoulder}
-                                onChange={(event) => setSelectedStrapShoulder(event.target.value)}
-                                placeholder="Ex.: Dourada"
-                                maxLength={120}
-                            />
+                            {strapShoulderOptions.length ? (
+                                <select value={selectedStrapShoulder} onChange={(event) => setSelectedStrapShoulder(event.target.value)}>
+                                    {strapShoulderOptions.map((option) => (
+                                        <option key={`${product.id}-strap-${option}`} value={option}>
+                                            {option}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={selectedStrapShoulder}
+                                    onChange={(event) => setSelectedStrapShoulder(event.target.value)}
+                                    placeholder="Ex.: Dourada"
+                                    maxLength={120}
+                                />
+                            )}
                         </label>
 
                         <label className="product-option-field">
                             <span>Desenho do Tecido</span>
-                            <input
-                                type="text"
-                                value={selectedFabricPattern}
-                                onChange={(event) => setSelectedFabricPattern(event.target.value)}
-                                placeholder="Ex.: Liso / Estampado"
-                                maxLength={120}
-                            />
+                            {fabricPatternOptions.length ? (
+                                <select value={selectedFabricPattern} onChange={(event) => setSelectedFabricPattern(event.target.value)}>
+                                    {fabricPatternOptions.map((option) => (
+                                        <option key={`${product.id}-fabric-${option}`} value={option}>
+                                            {option}
+                                        </option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={selectedFabricPattern}
+                                    onChange={(event) => setSelectedFabricPattern(event.target.value)}
+                                    placeholder="Ex.: Liso / Estampado"
+                                    maxLength={120}
+                                />
+                            )}
                         </label>
                     </div>
 

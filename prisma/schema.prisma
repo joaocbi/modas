@@ -14,6 +14,8 @@ model Product {
   subcategory        String   @default("")
   sizes              String[]
   colors             String[]
+  strapShoulderOptions String[] @default([])
+  fabricPatternOptions String[] @default([])
   images             String[] @default([])
   videos             String[] @default([])
   price              Decimal  @db.Decimal(10, 2)

@@ -276,6 +276,8 @@ function getEmptyProductForm() {
         subcategory: "",
         sizes: "",
         colors: "",
+        strapShoulderOptions: "",
+        fabricPatternOptions: "",
         paymentMethods: ["Pix", "Cartão de crédito", "Mercado Pago"],
         price: "",
         oldPrice: "",
@@ -924,6 +926,8 @@ export function AdminDashboard({
             subcategory: product.subcategory || "",
             sizes: product.sizes.join(", "),
             colors: product.colors.join(", "),
+            strapShoulderOptions: (product.strapShoulderOptions || []).join(", "),
+            fabricPatternOptions: (product.fabricPatternOptions || []).join(", "),
             paymentMethods: product.paymentMethods || [],
             price: pricingForm.price,
             oldPrice: formatDecimalInput(product.oldPrice),
@@ -1976,6 +1980,8 @@ export function AdminDashboard({
                             </label>
                             <label className="field"><span>Tamanhos</span><input value={productForm.sizes} onChange={(event) => updateProductField("sizes", event.target.value)} placeholder="P, M, G" required disabled={!canManage} /></label>
                             <label className="field"><span>Cores</span><input value={productForm.colors} onChange={(event) => updateProductField("colors", event.target.value)} placeholder="Preto, Areia" required disabled={!canManage} /></label>
+                            <label className="field"><span>Cor da Correia/Ombro (opções)</span><input value={productForm.strapShoulderOptions} onChange={(event) => updateProductField("strapShoulderOptions", event.target.value)} placeholder="Dourada, Prata, Preto" disabled={!canManage} /></label>
+                            <label className="field"><span>Desenho do Tecido (opções)</span><input value={productForm.fabricPatternOptions} onChange={(event) => updateProductField("fabricPatternOptions", event.target.value)} placeholder="Liso, Estampado, Texturizado" disabled={!canManage} /></label>
                             <label className="field field-full"><span>Descrição</span><textarea value={productForm.description} onChange={(event) => updateProductField("description", event.target.value)} rows={4} required disabled={!canManage} /></label>
                             <label className="field field-full">
                                 <span>Observações internas (máx. {INTERNAL_NOTES_MAX_LENGTH} caracteres, não aparecem na loja)</span>
