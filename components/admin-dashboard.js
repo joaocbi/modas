@@ -287,8 +287,8 @@ function getEmptyProductForm() {
         mercadoPagoEnabled: false,
         mercadoPagoLink: "",
         badge: "",
-        image: DEFAULT_PRODUCT_IMAGE,
-        images: [DEFAULT_PRODUCT_IMAGE],
+        image: "",
+        images: [],
         videos: [],
         featured: true,
         internalNotes: "",
@@ -2049,7 +2049,7 @@ export function AdminDashboard({
                                 <textarea
                                     value={(productForm.images || []).join("\n")}
                                     onChange={(event) => updateProductImagesFromText(event.target.value)}
-                                    placeholder={"/assets/ester01.png\n/assets/ester02.png"}
+                                    placeholder="Uma URL por linha"
                                     rows={5}
                                     disabled={!canManage}
                                 />
