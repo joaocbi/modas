@@ -44,6 +44,8 @@ function normalizeCartItems(items, products) {
                 quantity,
                 selectedSize: String(item?.selectedSize || selectedProduct.sizes?.[0] || "").trim(),
                 selectedColor: String(item?.selectedColor || selectedProduct.colors?.[0] || "").trim(),
+                selectedStrapShoulder: String(item?.selectedStrapShoulder || "").trim(),
+                selectedFabricPattern: String(item?.selectedFabricPattern || "").trim(),
                 product: selectedProduct,
             };
         })

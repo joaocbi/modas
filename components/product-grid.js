@@ -25,6 +25,8 @@ function ProductCard({ product, showDescription, descriptionMode }) {
     const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
     const [selectedSize, setSelectedSize] = useState(product.sizes?.[0] || "");
     const [selectedColor, setSelectedColor] = useState(product.colors?.[0] || "");
+    const [selectedStrapShoulder, setSelectedStrapShoulder] = useState("");
+    const [selectedFabricPattern, setSelectedFabricPattern] = useState("");
     const [cartFeedback, setCartFeedback] = useState("");
     const cardRef = useRef(null);
     const isOverlayDescription = descriptionMode === "overlay";
@@ -32,6 +34,8 @@ function ProductCard({ product, showDescription, descriptionMode }) {
     useEffect(() => {
         setSelectedSize(product.sizes?.[0] || "");
         setSelectedColor(product.colors?.[0] || "");
+        setSelectedStrapShoulder("");
+        setSelectedFabricPattern("");
         setCartFeedback("");
     }, [product.colors, product.id, product.sizes]);
 
@@ -127,12 +131,16 @@ function ProductCard({ product, showDescription, descriptionMode }) {
             quantity: 1,
             selectedSize,
             selectedColor,
+            selectedStrapShoulder,
+            selectedFabricPattern,
         });
         setCartFeedback("Adicionado ao carrinho");
         console.log("[ProductGrid] Product added to cart.", {
             productId: product.id,
             selectedSize,
             selectedColor,
+            selectedStrapShoulder,
+            selectedFabricPattern,
         });
     }
 
@@ -220,6 +228,28 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                                 ))}
                             </select>
                         </label>
+
+                        <label className="product-option-field">
+                            <span>Cor da Correia/Ombro</span>
+                            <input
+                                type="text"
+                                value={selectedStrapShoulder}
+                                onChange={(event) => setSelectedStrapShoulder(event.target.value)}
+                                placeholder="Ex.: Dourada"
+                                maxLength={120}
+                            />
+                        </label>
+
+                        <label className="product-option-field">
+                            <span>Desenho do Tecido</span>
+                            <input
+                                type="text"
+                                value={selectedFabricPattern}
+                                onChange={(event) => setSelectedFabricPattern(event.target.value)}
+                                placeholder="Ex.: Liso / Estampado"
+                                maxLength={120}
+                            />
+                        </label>
                     </div>
 
                     <div className="product-actions">
@@ -227,7 +257,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                             Adicionar ao carrinho
                         </button>
                         <Link
-                            href={`/carrinho?buyNow=${product.id}&size=${encodeURIComponent(selectedSize)}&color=${encodeURIComponent(selectedColor)}`}
+                            href={`/carrinho?buyNow=${product.id}&size=${encodeURIComponent(selectedSize)}&color=${encodeURIComponent(selectedColor)}&strap=${encodeURIComponent(selectedStrapShoulder)}&fabric=${encodeURIComponent(selectedFabricPattern)}`}
                             className="secondary-button"
                         >
                             Comprar agora
@@ -235,7 +265,17 @@ function ProductCard({ product, showDescription, descriptionMode }) {
                         <a href="/contato" className="text-button">
                             Tirar duvidas
                         </a>
-                        <a href={getProductWhatsAppLink(product)} target="_blank" rel="noreferrer" className="text-button">
+                        <a
+                            href={getProductWhatsAppLink(product, {
+                                selectedSize,
+                                selectedColor,
+                                selectedStrapShoulder,
+                                selectedFabricPattern,
+                            })}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-button"
+                        >
                             WhatsApp
                         </a>
                     </div>

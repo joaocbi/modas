@@ -14,6 +14,8 @@ export default async function CartPage({ searchParams }) {
     const buyNowProductId = Number(resolvedSearchParams?.buyNow || 0) || null;
     const buyNowSize = String(resolvedSearchParams?.size || "").trim();
     const buyNowColor = String(resolvedSearchParams?.color || "").trim();
+    const buyNowStrapShoulder = String(resolvedSearchParams?.strap || "").trim();
+    const buyNowFabricPattern = String(resolvedSearchParams?.fabric || "").trim();
 
     return (
         <main className="page-shell">
@@ -23,6 +25,8 @@ export default async function CartPage({ searchParams }) {
                 buyNowProductId={buyNowProductId}
                 buyNowSize={buyNowSize}
                 buyNowColor={buyNowColor}
+                buyNowStrapShoulder={buyNowStrapShoulder}
+                buyNowFabricPattern={buyNowFabricPattern}
             />
         </main>
     );

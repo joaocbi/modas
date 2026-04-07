@@ -119,8 +119,17 @@ export const contactHighlights = [
     "Auxílio para pedidos, trocas e cadastro.",
 ];
 
-export function getProductWhatsAppLink(product) {
+export function getProductWhatsAppLink(product, options = {}) {
+    const selectedSize = String(options.selectedSize || "").trim();
+    const selectedColor = String(options.selectedColor || "").trim();
+    const selectedStrapShoulder = String(options.selectedStrapShoulder || "").trim();
+    const selectedFabricPattern = String(options.selectedFabricPattern || "").trim();
+
     return buildWhatsAppUrl(
-        `Olá, tenho interesse no produto ${product.name}.\nCategoria: ${product.category}\nValor: R$ ${product.price.toFixed(2).replace(".", ",")}`
+        `Olá, tenho interesse no produto ${product.name}.\nCategoria: ${product.category}\nValor: R$ ${product.price.toFixed(2).replace(".", ",")}${
+            selectedColor ? `\nCor: ${selectedColor}` : ""
+        }${selectedSize ? `\nTamanho: ${selectedSize}` : ""}${
+            selectedStrapShoulder ? `\nCor da Correia/Ombro: ${selectedStrapShoulder}` : ""
+        }${selectedFabricPattern ? `\nDesenho do Tecido: ${selectedFabricPattern}` : ""}`
     );
 }

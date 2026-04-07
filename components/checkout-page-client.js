@@ -88,6 +88,8 @@ export function CheckoutPageClient({
     buyNowProductId = null,
     buyNowSize = "",
     buyNowColor = "",
+    buyNowStrapShoulder = "",
+    buyNowFabricPattern = "",
 }) {
     const [cartItems, setCartState] = useState([]);
     const [paymentConfig, setPaymentConfig] = useState({
@@ -136,7 +138,7 @@ export function CheckoutPageClient({
             return;
         }
 
-        const buyNowKey = [buyNowProductId, buyNowSize, buyNowColor].join("::");
+        const buyNowKey = [buyNowProductId, buyNowSize, buyNowColor, buyNowStrapShoulder, buyNowFabricPattern].join("::");
 
         if (buyNowAppliedRef.current === buyNowKey) {
             return;
@@ -150,12 +152,16 @@ export function CheckoutPageClient({
 
         const selectedSize = String(buyNowSize || product.sizes?.[0] || "").trim();
         const selectedColor = String(buyNowColor || product.colors?.[0] || "").trim();
+        const selectedStrapShoulder = String(buyNowStrapShoulder || "").trim();
+        const selectedFabricPattern = String(buyNowFabricPattern || "").trim();
         const storedItems = getCartItems();
         const existingItemIndex = storedItems.findIndex(
             (item) =>
                 Number(item.productId) === Number(product.id) &&
                 String(item.selectedSize || "").trim() === selectedSize &&
-                String(item.selectedColor || "").trim() === selectedColor
+                String(item.selectedColor || "").trim() === selectedColor &&
+                String(item.selectedStrapShoulder || "").trim() === selectedStrapShoulder &&
+                String(item.selectedFabricPattern || "").trim() === selectedFabricPattern
         );
 
         const nextItems =
@@ -175,6 +181,8 @@ export function CheckoutPageClient({
                           quantity: 1,
                           selectedSize,
                           selectedColor,
+                          selectedStrapShoulder,
+                          selectedFabricPattern,
                       },
                   ];
 
@@ -182,6 +190,8 @@ export function CheckoutPageClient({
             productId: product.id,
             selectedSize,
             selectedColor,
+            selectedStrapShoulder,
+            selectedFabricPattern,
             previousItemCount: storedItems.length,
             nextItemCount: nextItems.length,
         });
@@ -189,7 +199,7 @@ export function CheckoutPageClient({
         buyNowAppliedRef.current = buyNowKey;
         setCartItems(nextItems);
         setCartState(nextItems);
-    }, [buyNowColor, buyNowProductId, buyNowSize, initialProducts]);
+    }, [buyNowColor, buyNowFabricPattern, buyNowProductId, buyNowSize, buyNowStrapShoulder, initialProducts]);
 
     useEffect(() => {
         let isCancelled = false;
@@ -512,6 +522,8 @@ export function CheckoutPageClient({
                         quantity: item.quantity,
                         selectedSize: item.selectedSize,
                         selectedColor: item.selectedColor,
+                        selectedStrapShoulder: item.selectedStrapShoulder,
+                        selectedFabricPattern: item.selectedFabricPattern,
                     })),
                     card: cardPayload,
                 }),
@@ -780,6 +792,8 @@ export function CheckoutPageClient({
                                                 <span>
                                                     {item.selectedColor || "Cor padrão"} • {item.selectedSize || "Tamanho padrão"}
                                                 </span>
+                                                {item.selectedStrapShoulder ? <span>Correia/Ombro: {item.selectedStrapShoulder}</span> : null}
+                                                {item.selectedFabricPattern ? <span>Desenho do tecido: {item.selectedFabricPattern}</span> : null}
                                                 <span>{formatCurrency(item.product.price)} cada</span>
                                                 <span>Edite a quantidade ou exclua o item abaixo.</span>
                                                 <div className="checkout-quantity-row">
