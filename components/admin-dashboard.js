@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, CreditCard, FolderKanban, ImagePlus, Package
 import { useEffect, useMemo, useState } from "react";
 
 const PAYMENT_METHOD_OPTIONS = ["Pix", "Cartão de crédito", "Cartão de débito", "Boleto", "Mercado Pago"];
-const DEFAULT_PRODUCT_IMAGE = "/assets/product_4.jpg";
+const DEFAULT_PRODUCT_IMAGE = "/assets/ester01.png";
 const MAX_PRODUCT_IMAGES = 20;
 const MAX_PRODUCT_VIDEOS = 1;
 const MAX_IMAGE_DIMENSION = 1400;
@@ -465,7 +465,7 @@ export function AdminDashboard({
     const [isUploadingImages, setIsUploadingImages] = useState(false);
     const [isUploadingVideos, setIsUploadingVideos] = useState(false);
     const [isUploadingCategoryImage, setIsUploadingCategoryImage] = useState(false);
-    const [imagePreview, setImagePreview] = useState("/assets/product_4.jpg");
+    const [imagePreview, setImagePreview] = useState("/assets/ester01.png");
     const [isProductModalOpen, setIsProductModalOpen] = useState(false);
     const [zoomedImage, setZoomedImage] = useState("");
     const [categoryImageDrafts, setCategoryImageDrafts] = useState(buildCategoryImageDrafts(initialProductCategories));
@@ -2043,7 +2043,7 @@ export function AdminDashboard({
                                 <textarea
                                     value={(productForm.images || []).join("\n")}
                                     onChange={(event) => updateProductImagesFromText(event.target.value)}
-                                    placeholder={"/assets/product_4.jpg\n/assets/product_2.jpg"}
+                                    placeholder={"/assets/ester01.png\n/assets/ester02.png"}
                                     rows={5}
                                     disabled={!canManage}
                                 />
