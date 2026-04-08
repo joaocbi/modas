@@ -482,6 +482,14 @@ export function AdminDashboard({
     const totalRevenue = useMemo(() => orders.reduce((sum, order) => sum + Number(order.total || 0), 0), [orders]);
     const activeCoupons = useMemo(() => coupons.filter((coupon) => coupon.active).length, [coupons]);
     const openLeads = useMemo(() => leads.filter((lead) => lead.status === "new").length, [leads]);
+    const pendingOrders = useMemo(
+        () =>
+            orders.filter((order) => {
+                const normalizedStatus = String(order.status || "").trim().toLowerCase();
+                return ["pending", "pending_payment", "processing_payment", "in_process", "new"].includes(normalizedStatus);
+            }).length,
+        [orders]
+    );
     const totalCategoryCount = useMemo(() => productCategories.length, [productCategories]);
     const totalSubcategoryCount = useMemo(
         () => productCategories.reduce((sum, category) => sum + (category.subcategories?.length || 0), 0),
@@ -1499,6 +1507,23 @@ export function AdminDashboard({
             </div>
 
             {statusMessage ? <p className={`form-status form-status-${statusType}`}>{statusMessage}</p> : null}
+
+            <div className="admin-alert-grid">
+                <article className="highlight-item admin-alert-card">
+                    <strong>Pedidos aguardando ação: {pendingOrders}</strong>
+                    <span>{pendingOrders ? "Existem pedidos para priorizar agora." : "Sem pendências de pedidos no momento."}</span>
+                    <button type="button" className="text-button" onClick={() => setActiveTab("orders")}>
+                        Ir para pedidos
+                    </button>
+                </article>
+                <article className="highlight-item admin-alert-card">
+                    <strong>Mensagens novas de clientes: {openLeads}</strong>
+                    <span>{openLeads ? "Existem leads novos sem resposta." : "Nenhuma mensagem nova pendente."}</span>
+                    <button type="button" className="text-button" onClick={() => setActiveTab("leads")}>
+                        Ir para mensagens
+                    </button>
+                </article>
+            </div>
 
             {activeTab === "overview" ? (
                 <div className="admin-grid">

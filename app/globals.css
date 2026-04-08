@@ -1553,6 +1553,27 @@ img {
     margin-bottom: 24px;
 }
 
+.admin-alert-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.admin-alert-card {
+    align-items: start;
+    gap: 10px;
+}
+
+.admin-alert-card strong {
+    font-size: 1rem;
+}
+
+.admin-alert-card .text-button {
+    padding: 0;
+    min-height: auto;
+}
+
 .admin-search-field {
     align-self: end;
 }
@@ -2227,6 +2248,7 @@ img {
     .admin-metrics,
     .admin-overview-grid,
     .admin-summary-grid,
+    .admin-alert-grid,
     .admin-toolbar,
     .two-column,
     .footer-grid,
