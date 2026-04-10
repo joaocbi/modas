@@ -109,7 +109,7 @@ Caso a compra esteja sendo feita pelo celular, copie o código gerado e cole no 
 
 A chave do PIX copia e cola expira em 60 minutos.
 Caso deseje pagar metade no PIX e metade no cartão, entre em contato com o nosso suporte para te auxiliar.
-Pagamentos no PIX possuem 3% de desconto.
+Pagamentos no PIX possuem 5% de desconto.
 Por medidas de segurança, é terminantemente proibido usar qualquer outra forma de pagamento sem falar com nosso suporte.`,
     },
 ];
