@@ -24,6 +24,7 @@ export const navigation = [
 export const benefits = [
     { title: "Frete grátis", description: "Para compras acima de 800,00" },
     { title: "Cartão de Crédito", description: "Até 4 vezes sem juros" },
+    { title: "Pagamento a Vista no PIX", description: "10% de Desconto" },
     { title: "Pedido mínimo", description: "O valor para pedido mínimo é de R$ 400,00" },
 ];
 
