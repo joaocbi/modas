@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Camera, CreditCard, Mail, Truck, WalletCards } from "lucide-react";
+import { Mail, WalletCards } from "lucide-react";
 import { navigation, store } from "../data/store";
 
 export function Footer() {
@@ -32,23 +32,6 @@ export function Footer() {
                     </div>
                 </div>
 
-                <div>
-                    <p className="footer-eyebrow">Redes sociais</p>
-                    <div className="footer-stack">
-                        <a href={store.instagram} target="_blank" rel="noreferrer">
-                            <Camera size={16} />
-                            Instagram
-                        </a>
-                        <span>
-                            <CreditCard size={16} />
-                            Cartão e Pix
-                        </span>
-                        <span>
-                            <Truck size={16} />
-                            Entrega
-                        </span>
-                    </div>
-                </div>
             </div>
 
             <div className="footer-bottom">
