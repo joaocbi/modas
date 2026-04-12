@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ContactForm } from "../components/contact-form";
 import { HeroSlider } from "../components/hero-slider";
-import { benefits, contactHighlights, promotions } from "../data/store";
+import { benefits, contactHighlights, promotionsFeatured, promotionsMain } from "../data/store";
 
 const newsletterFields = [
     { name: "name", label: "Seu nome", type: "text", placeholder: "Como podemos te chamar?" },
@@ -31,7 +31,19 @@ export default async function HomePage() {
                     <p>Campanhas visuais para direcionar a cliente às coleções e novidades da estação.</p>
                 </div>
                 <div className="promo-grid">
-                    {promotions.map((promotion) => (
+                    {promotionsMain.map((promotion) => (
+                        <article key={promotion.title} className="promo-card">
+                            <img src={promotion.image} alt={promotion.title} />
+                            <div className="promo-overlay">
+                                <h3>{promotion.title}</h3>
+                                <p>{promotion.subtitle}</p>
+                            </div>
+                        </article>
+                    ))}
+                </div>
+
+                <div className="promo-grid promo-grid-featured" aria-label="Destaques Relógios e Pastas">
+                    {promotionsFeatured.map((promotion) => (
                         <article key={promotion.title} className="promo-card">
                             <img src={promotion.image} alt={promotion.title} />
                             <div className="promo-overlay">

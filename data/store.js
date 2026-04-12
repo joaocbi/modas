@@ -43,12 +43,20 @@ export const heroSlides = [
     },
 ];
 
-export const promotions = [
+/** Top row: original campaign cards only (do not mix with category-specific assets). */
+export const promotionsMain = [
     { image: "/assets/hero3.png", title: "Seleção especial", subtitle: "Peças com acabamento elegante e toque leve." },
     { image: "/assets/promotion03.png", title: "Essenciais da estação", subtitle: "Modelos versáteis para compor produções refinadas." },
+];
+
+/** Second row below: dedicated cards with relogio.png / pasta.png only. */
+export const promotionsFeatured = [
     { image: "/assets/relogio.png", title: "Relógios", subtitle: "Detalhes que marcam o tempo com estilo e sofisticação." },
     { image: "/assets/pasta.png", title: "Pastas e bolsas", subtitle: "Organização e presença para o dia a dia com elegância." },
 ];
+
+/** Full list for any code that still expects a single array. */
+export const promotions = [...promotionsMain, ...promotionsFeatured];
 
 export const howToBuySteps = [
     {

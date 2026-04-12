@@ -922,6 +922,10 @@ img {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.promo-grid-featured {
+    margin-top: 28px;
+}
+
 .promo-card {
     position: relative;
     min-height: 420px;
