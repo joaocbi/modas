@@ -1,7 +1,14 @@
 import Link from "next/link";
 import { ContactForm } from "../components/contact-form";
 import { HeroSlider } from "../components/hero-slider";
-import { benefits, contactHighlights, promotionsFeatured, promotionsMain } from "../data/store";
+import {
+    benefits,
+    contactHighlights,
+    promotionsFeatured,
+    promotionsFeaturedHeading,
+    promotionsMain,
+    promotionsMainHeading,
+} from "../data/store";
 
 const newsletterFields = [
     { name: "name", label: "Seu nome", type: "text", placeholder: "Como podemos te chamar?" },
@@ -26,9 +33,9 @@ export default async function HomePage() {
 
             <section className="section">
                 <div className="section-heading align-center">
-                    <p className="section-kicker">Destaques da marca</p>
-                    <h2>Seleção pensada para valorizar o seu estilo</h2>
-                    <p>Campanhas visuais para direcionar a cliente às coleções e novidades da estação.</p>
+                    <p className="section-kicker">{promotionsMainHeading.kicker}</p>
+                    <h2>{promotionsMainHeading.title}</h2>
+                    <p>{promotionsMainHeading.description}</p>
                 </div>
                 <div className="promo-grid">
                     {promotionsMain.map((promotion) => (
@@ -43,11 +50,9 @@ export default async function HomePage() {
                 </div>
 
                 <div className="section-heading align-center promo-featured-heading">
-                    <p className="section-kicker">Relógios e pastas</p>
-                    <h2>Complementos que elevam o seu look</h2>
-                    <p>
-                        Descubra relógios com presença refinada e pastas e bolsas pensadas para organizar com estilo do trabalho ao lazer.
-                    </p>
+                    <p className="section-kicker">{promotionsFeaturedHeading.kicker}</p>
+                    <h2>{promotionsFeaturedHeading.title}</h2>
+                    <p>{promotionsFeaturedHeading.description}</p>
                 </div>
 
                 <div className="promo-grid promo-grid-featured" aria-label="Destaques Relógios e Pastas">

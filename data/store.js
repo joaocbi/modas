@@ -43,6 +43,21 @@ export const heroSlides = [
     },
 ];
 
+/** Section copy above the main promo row (edit here only). */
+export const promotionsMainHeading = {
+    kicker: "Destaques da marca",
+    title: "Seleção pensada para valorizar o seu estilo",
+    description: "Campanhas visuais para direcionar a cliente às coleções e novidades da estação.",
+};
+
+/** Section copy above Relógios / Pastas cards (edit here only). */
+export const promotionsFeaturedHeading = {
+    kicker: "Relógios e pastas",
+    title: "Complementos que elevam o seu look",
+    description:
+        "Descubra relógios com presença refinada e pastas e bolsas pensadas para organizar com estilo do trabalho ao lazer.",
+};
+
 /** Top row: original campaign cards only (do not mix with category-specific assets). */
 export const promotionsMain = [
     { image: "/assets/hero3.png", title: "Seleção especial", subtitle: "Peças com acabamento elegante e toque leve." },
