@@ -1,4 +1,5 @@
 import { Montserrat, Playfair_Display } from "next/font/google";
+import { PwaLaunchSplash } from "../components/pwa-launch-splash";
 import { SiteChrome } from "../components/site-chrome";
 import { store } from "../data/store";
 import { getAllProductCategories } from "../lib/product-category-store";
@@ -33,6 +34,7 @@ export default async function RootLayout({ children }) {
     return (
         <html lang="pt-BR">
             <body className={`${montserrat.className} ${playfairDisplay.variable}`}>
+                <PwaLaunchSplash />
                 <SiteChrome
                     whatsappHref={whatsappHref}
                     initialCategoryCarouselItems={productCategories.filter((category) => String(category.image || "").trim())}

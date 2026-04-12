@@ -46,6 +46,8 @@ export const heroSlides = [
 export const promotions = [
     { image: "/assets/hero3.png", title: "Seleção especial", subtitle: "Peças com acabamento elegante e toque leve." },
     { image: "/assets/promotion03.png", title: "Essenciais da estação", subtitle: "Modelos versáteis para compor produções refinadas." },
+    { image: "/assets/cjbc1.png", title: "Relógios", subtitle: "Detalhes que marcam o tempo com estilo e sofisticação." },
+    { image: "/assets/brc1.png", title: "Pastas e bolsas", subtitle: "Organização e presença para o dia a dia com elegância." },
 ];
 
 export const howToBuySteps = [

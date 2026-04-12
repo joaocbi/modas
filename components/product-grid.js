@@ -31,6 +31,7 @@ function ProductCard({ product, showDescription, descriptionMode }) {
     const [selectedFabricPattern, setSelectedFabricPattern] = useState("");
     const [cartFeedback, setCartFeedback] = useState("");
     const cardRef = useRef(null);
+    const expandedPreviewRef = useRef(null);
     const isOverlayDescription = descriptionMode === "overlay";
 
     useEffect(() => {
@@ -47,13 +48,16 @@ function ProductCard({ product, showDescription, descriptionMode }) {
         }
 
         function handlePointerDown(event) {
-            if (!cardRef.current?.contains(event.target)) {
-                setIsDescriptionVisible(false);
-                console.log("[ProductGrid] Product description closed by outside click.", {
-                    productId: product.id,
-                    productName: product.name,
-                });
+            // Expanded preview is rendered outside the card; clicks there must not count as "outside".
+            if (cardRef.current?.contains(event.target) || expandedPreviewRef.current?.contains(event.target)) {
+                return;
             }
+
+            setIsDescriptionVisible(false);
+            console.log("[ProductGrid] Product description closed by outside click.", {
+                productId: product.id,
+                productName: product.name,
+            });
         }
 
         document.addEventListener("pointerdown", handlePointerDown);
@@ -103,20 +107,14 @@ function ProductCard({ product, showDescription, descriptionMode }) {
         setZoomOrigin(`${x}% ${y}%`);
     }
 
-    function handleExpandedPreviewMouseLeave() {
-        if (!isOverlayDescription || !isDescriptionVisible) {
+    function handleCardBlur(event) {
+        if (!isOverlayDescription || event.currentTarget.contains(event.relatedTarget)) {
             return;
         }
 
-        setIsDescriptionVisible(false);
-        console.log("[ProductGrid] Expanded product preview hidden after mouse leave.", {
-            productId: product.id,
-            productName: product.name,
-        });
-    }
-
-    function handleCardBlur(event) {
-        if (!isOverlayDescription || event.currentTarget.contains(event.relatedTarget)) {
+        // Do not close overlay mode when focus moves into the expanded preview (outside the card DOM).
+        // Overlay preview is closed via backdrop or outside-click handler, not card blur.
+        if (isDescriptionVisible) {
             return;
         }
 
@@ -306,14 +304,19 @@ function ProductCard({ product, showDescription, descriptionMode }) {
             </article>
 
             {showDescription && isOverlayDescription && isDescriptionVisible ? (
-                <div className="product-expanded-preview-backdrop" role="presentation" onClick={() => setIsDescriptionVisible(false)}>
+                <div
+                    ref={expandedPreviewRef}
+                    className="product-expanded-preview-backdrop"
+                    role="presentation"
+                    onClick={() => setIsDescriptionVisible(false)}
+                >
                     <div
                         className="product-expanded-preview-modal"
                         role="dialog"
                         aria-modal="true"
                         aria-label={`Prévia ampliada de ${product.name}`}
                         onClick={(event) => event.stopPropagation()}
-                        onMouseLeave={handleExpandedPreviewMouseLeave}
+                        onPointerDown={(event) => event.stopPropagation()}
                     >
                         <div className="product-expanded-image-wrap">
                             <img src={activeImage} alt={`Prévia ampliada de ${product.name}`} className="product-expanded-image" />

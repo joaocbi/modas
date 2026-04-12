@@ -8,7 +8,8 @@ export function CategoryCarousel({ items }) {
     }
 
     const repeatedItems = [...items, ...items];
-    const animationDuration = `${Math.max(18, items.length * 6)}s`;
+    // Shorter duration = faster scroll (full loop time).
+    const animationDuration = `${Math.max(10, items.length * 3)}s`;
 
     return (
         <section className="category-carousel-shell" aria-label="Categorias em destaque">
