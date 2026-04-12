@@ -42,6 +42,14 @@ export default async function HomePage() {
                     ))}
                 </div>
 
+                <div className="section-heading align-center promo-featured-heading">
+                    <p className="section-kicker">Relógios e pastas</p>
+                    <h2>Complementos que elevam o seu look</h2>
+                    <p>
+                        Descubra relógios com presença refinada e pastas e bolsas pensadas para organizar com estilo do trabalho ao lazer.
+                    </p>
+                </div>
+
                 <div className="promo-grid promo-grid-featured" aria-label="Destaques Relógios e Pastas">
                     {promotionsFeatured.map((promotion) => (
                         <article key={promotion.title} className="promo-card">

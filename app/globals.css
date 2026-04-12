@@ -922,8 +922,13 @@ img {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.promo-featured-heading {
+    margin-top: 48px;
+    margin-bottom: 8px;
+}
+
 .promo-grid-featured {
-    margin-top: 28px;
+    margin-top: 20px;
 }
 
 .promo-card {
