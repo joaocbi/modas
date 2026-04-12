@@ -2179,25 +2179,26 @@ img {
     font-size: 0.92rem;
 }
 
-.pwa-launch-splash {
+/* Static PWA boot layer: shown only while html has .pwa-splash-active (set by inline script in layout). */
+.pwa-boot-cover {
+    display: none;
     position: fixed;
     inset: 0;
-    z-index: 200;
-    display: grid;
+    z-index: 2147483646;
     place-items: center;
     background: var(--color-bg);
     pointer-events: auto;
 }
 
-.pwa-launch-splash-inner {
+html.pwa-splash-active .pwa-boot-cover {
     display: grid;
-    place-items: center;
-    padding: 32px;
 }
 
-.pwa-launch-splash-logo {
+.pwa-boot-cover-logo {
     width: min(42vw, 180px);
     height: auto;
+    max-height: 40vh;
+    object-fit: contain;
     border-radius: 22px;
     box-shadow: var(--shadow-soft);
 }

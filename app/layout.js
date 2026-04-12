@@ -1,5 +1,4 @@
 import { Montserrat, Playfair_Display } from "next/font/google";
-import { PwaLaunchSplash } from "../components/pwa-launch-splash";
 import { SiteChrome } from "../components/site-chrome";
 import { store } from "../data/store";
 import { getAllProductCategories } from "../lib/product-category-store";
@@ -34,7 +33,16 @@ export default async function RootLayout({ children }) {
     return (
         <html lang="pt-BR">
             <body className={`${montserrat.className} ${playfairDisplay.variable}`}>
-                <PwaLaunchSplash />
+                {/* Sync splash for installed PWA: blocks first paint of page text (e.g. "Para...") before React hydrates. */}
+                <script
+                    dangerouslySetInnerHTML={{
+                        __html: `(function(){try{var s=window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches;var i=window.navigator&&window.navigator.standalone===true;if(!s&&!i)return;document.documentElement.classList.add("pwa-splash-active");window.setTimeout(function(){document.documentElement.classList.remove("pwa-splash-active");},2000);}catch(e){}})();`,
+                    }}
+                />
+                <div className="pwa-boot-cover" aria-hidden="true">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src="/assets/logo-do-santos-market.png" alt="" width={180} height={180} className="pwa-boot-cover-logo" />
+                </div>
                 <SiteChrome
                     whatsappHref={whatsappHref}
                     initialCategoryCarouselItems={productCategories.filter((category) => String(category.image || "").trim())}
